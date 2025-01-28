@@ -14,8 +14,8 @@ class GameProvider extends ChangeNotifier {
   ChessSudokuBoard? _currentBoard;
 
   // 선택된 셀의 위치
-  int? _selectedRow;
-  int? _selectedCol;
+  int? selectedRow;
+  int? selectedCol;
 
   // 힌트 사용 여부
   bool _showHints = false;
@@ -28,7 +28,7 @@ class GameProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String get error => _error;
   bool get showHints => _showHints;
-  bool get hasSelectedCell => _selectedRow != null && _selectedCol != null;
+  bool get hasSelectedCell => selectedRow != null && selectedCol != null;
 
   /// 새로운 퍼즐 생성
   Future<void> generateNewPuzzle({String difficulty = 'medium', List<PieceConfig>? pieceConfig}) async {
@@ -41,8 +41,8 @@ class GameProvider extends ChangeNotifier {
 
       _currentPuzzle = puzzle;
       _currentBoard = ChessSudokuBoard.fromJson(puzzle.puzzle.toJson());
-      _selectedRow = null;
-      _selectedCol = null;
+      selectedRow = null;
+      selectedCol = null;
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -62,8 +62,8 @@ class GameProvider extends ChangeNotifier {
 
       _currentPuzzle = puzzle;
       _currentBoard = ChessSudokuBoard.fromJson(puzzle.puzzle.toJson());
-      _selectedRow = null;
-      _selectedCol = null;
+      selectedRow = null;
+      selectedCol = null;
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -79,8 +79,8 @@ class GameProvider extends ChangeNotifier {
       return;
     }
 
-    _selectedRow = row;
-    _selectedCol = col;
+    selectedRow = row;
+    selectedCol = col;
     notifyListeners();
   }
 
@@ -88,8 +88,8 @@ class GameProvider extends ChangeNotifier {
   void enterNumber(int number) {
     if (!hasSelectedCell || _currentBoard == null) return;
 
-    if (_currentBoard!.isValidNumber(_selectedRow!, _selectedCol!, number)) {
-      _currentBoard!.placeNumber(_selectedRow!, _selectedCol!, number);
+    if (_currentBoard!.isValidNumber(selectedRow!, selectedCol!, number)) {
+      _currentBoard!.placeNumber(selectedRow!, selectedCol!, number);
       notifyListeners();
 
       // 퍼즐이 완성되었는지 확인
@@ -103,7 +103,7 @@ class GameProvider extends ChangeNotifier {
   void eraseNumber() {
     if (!hasSelectedCell || _currentBoard == null) return;
 
-    _currentBoard!.removeNumber(_selectedRow!, _selectedCol!);
+    _currentBoard!.removeNumber(selectedRow!, selectedCol!);
     notifyListeners();
   }
 
@@ -150,8 +150,8 @@ class GameProvider extends ChangeNotifier {
 
   /// 선택된 셀 초기화
   void clearSelection() {
-    _selectedRow = null;
-    _selectedCol = null;
+    selectedRow = null;
+    selectedCol = null;
     notifyListeners();
   }
 }
