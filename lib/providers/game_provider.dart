@@ -24,7 +24,7 @@ class GameProvider extends ChangeNotifier {
   int _hintsUsed = 0;
   Duration _elapsedTime = Duration.zero;
 
-  GameProvider({GameService? gameService}) : _gameService = gameService ?? GameService();
+  GameProvider({GameService? gameService}) : _gameService = gameService ?? GameService(useMock: false);
 
   // Getters
   ChessSudokuPuzzle? get currentPuzzle => _currentPuzzle;

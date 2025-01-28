@@ -10,7 +10,7 @@ class GameService {
   final bool useMock;
 
   GameService({String? baseUrl, Dio? dio, this.useMock = true})
-    : _baseUrl = baseUrl ?? 'http://localhost:5000',
+    : _baseUrl = baseUrl ?? 'http://192.168.0.2:5000',
       _dio = dio ?? Dio();
 
   /// 새로운 체스 스도쿠 퍼즐 생성 요청
@@ -33,8 +33,10 @@ class GameService {
         throw Exception('Failed to generate puzzle: ${response.statusCode}');
       }
     } on DioException catch (e) {
+      print("에러1 : ${e.message}");
       throw Exception('Network error: ${e.message}');
     } catch (e) {
+      print("에러2 : ${e}");
       throw Exception('Unexpected error: $e');
     }
   }
@@ -93,21 +95,20 @@ class ChessSudokuPuzzle {
   });
 
   factory ChessSudokuPuzzle.fromJson(Map<String, dynamic> json) {
-    final puzzleData = json['puzzle_data'];
+    print('Received JSON: $json');
+
+    final puzzleData = json['puzzle_data'] ?? json;
 
     // removed_cells가 null이면 빈 리스트 사용
-    final removedCellsList = puzzleData['removed_cells'] as List?;
-    final removedCells =
-        removedCellsList != null
-            ? removedCellsList.map((cell) => RemovedCell.fromJson(cell)).toList()
-            : <RemovedCell>[];
+    final removedCellsList = (puzzleData['removed_cells'] ?? []) as List;
+    final removedCells = removedCellsList.map((cell) => RemovedCell.fromJson(cell)).toList();
 
     return ChessSudokuPuzzle(
-      puzzleId: json['puzzle_id'] as String,
+      puzzleId: json['puzzle_id'] ?? '', // null일 경우 빈 문자열
       puzzle: ChessSudokuBoard.fromJson(puzzleData['puzzle']),
       solution: ChessSudokuBoard.fromJson(puzzleData['solution']),
       removedCells: removedCells,
-      difficulty: json['difficulty'] as String,
+      difficulty: json['difficulty'] ?? 'medium', // null일 경우 'medium'
     );
   }
 
