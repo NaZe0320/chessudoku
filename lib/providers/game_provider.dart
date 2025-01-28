@@ -20,6 +20,10 @@ class GameProvider extends ChangeNotifier {
   // 힌트 사용 여부
   bool _showHints = false;
 
+  int _mistakes = 0;
+  int _hintsUsed = 0;
+  Duration _elapsedTime = Duration.zero;
+
   GameProvider({GameService? gameService}) : _gameService = gameService ?? GameService();
 
   // Getters
@@ -28,10 +32,13 @@ class GameProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String get error => _error;
   bool get showHints => _showHints;
+  int get mistakes => _mistakes;
+  int get hintsUsed => _hintsUsed;
   bool get hasSelectedCell => selectedRow != null && selectedCol != null;
+  Duration get elapsedTime => _elapsedTime;
 
   /// 새로운 퍼즐 생성
-  Future<void> generateNewPuzzle({String difficulty = 'medium', List<PieceConfig>? pieceConfig}) async {
+  Future<void> generatePuzzle({String difficulty = 'medium', List<PieceConfig>? pieceConfig}) async {
     try {
       _isLoading = true;
       _error = '';
@@ -41,8 +48,7 @@ class GameProvider extends ChangeNotifier {
 
       _currentPuzzle = puzzle;
       _currentBoard = ChessSudokuBoard.fromJson(puzzle.puzzle.toJson());
-      selectedRow = null;
-      selectedCol = null;
+      _resetGameState();
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -52,7 +58,7 @@ class GameProvider extends ChangeNotifier {
   }
 
   /// 저장된 퍼즐 불러오기
-  Future<void> loadPuzzle(String puzzleId) async {
+  Future<void> getPuzzle(String puzzleId) async {
     try {
       _isLoading = true;
       _error = '';
@@ -62,14 +68,23 @@ class GameProvider extends ChangeNotifier {
 
       _currentPuzzle = puzzle;
       _currentBoard = ChessSudokuBoard.fromJson(puzzle.puzzle.toJson());
-      selectedRow = null;
-      selectedCol = null;
+      _resetGameState();
     } catch (e) {
       _error = e.toString();
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  /// 게임 상태 초기화
+  void _resetGameState() {
+    selectedRow = null;
+    selectedCol = null;
+    _mistakes = 0;
+    _hintsUsed = 0;
+    _elapsedTime = Duration.zero;
+    _showHints = false;
   }
 
   /// 셀 선택
@@ -90,11 +105,18 @@ class GameProvider extends ChangeNotifier {
 
     if (_currentBoard!.isValidNumber(selectedRow!, selectedCol!, number)) {
       _currentBoard!.placeNumber(selectedRow!, selectedCol!, number);
+
+      // 입력된 숫자가 정답과 다른 경우
+      if (_currentPuzzle != null && _currentPuzzle!.solution.board[selectedRow!][selectedCol!] != number) {
+        _mistakes++;
+      }
+
       notifyListeners();
 
       // 퍼즐이 완성되었는지 확인
       if (isPuzzleCompleted()) {
         // TODO: 게임 완료 처리
+        print("완료");
       }
     }
   }
@@ -110,6 +132,9 @@ class GameProvider extends ChangeNotifier {
   /// 힌트 토글
   void toggleHints() {
     _showHints = !_showHints;
+    if (_showHints) {
+      _hintsUsed++;
+    }
     notifyListeners();
   }
 

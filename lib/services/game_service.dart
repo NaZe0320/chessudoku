@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:chessudoku/test/mock_data.dart';
 import 'package:dio/dio.dart';
 import '../models/board.dart';
 
@@ -6,12 +7,21 @@ import '../models/board.dart';
 class GameService {
   final Dio _dio;
   final String _baseUrl;
+  final bool useMock;
 
-  GameService({String? baseUrl, Dio? dio}) : _baseUrl = baseUrl ?? 'http://localhost:5000', _dio = dio ?? Dio();
+  GameService({String? baseUrl, Dio? dio, this.useMock = true})
+    : _baseUrl = baseUrl ?? 'http://localhost:5000',
+      _dio = dio ?? Dio();
 
   /// 새로운 체스 스도쿠 퍼즐 생성 요청
   Future<ChessSudokuPuzzle> generatePuzzle({String difficulty = 'medium', List<PieceConfig>? pieceConfig}) async {
     try {
+      if (useMock) {
+        // Mock 데이터 사용
+        final mockResponse = await MockData.getMockPuzzle(difficulty);
+        return ChessSudokuPuzzle.fromJson(mockResponse);
+      }
+
       final response = await _dio.post(
         '$_baseUrl/generate',
         data: {'difficulty': difficulty, 'pieces': pieceConfig?.map((config) => config.toJson()).toList()},
@@ -32,6 +42,13 @@ class GameService {
   /// 특정 ID의 퍼즐 불러오기
   Future<ChessSudokuPuzzle> getPuzzle(String puzzleId) async {
     try {
+      if (useMock) {
+        // puzzleId에서 난이도 추출 (예: 'easy_puzzle_1' -> 'easy')
+        final difficulty = puzzleId.split('_').first;
+        final mockResponse = await MockData.getMockPuzzle(difficulty);
+        return ChessSudokuPuzzle.fromJson(mockResponse);
+      }
+
       final response = await _dio.get('$_baseUrl/puzzles/$puzzleId');
 
       if (response.statusCode == 200) {
@@ -60,7 +77,6 @@ class PieceConfig {
       PieceConfig(type: json['type'] as String, position: List<int>.from(json['position']));
 }
 
-/// 체스 스도쿠 퍼즐 데이터를 담는 클래스
 class ChessSudokuPuzzle {
   final String puzzleId;
   final ChessSudokuBoard puzzle;
@@ -78,11 +94,19 @@ class ChessSudokuPuzzle {
 
   factory ChessSudokuPuzzle.fromJson(Map<String, dynamic> json) {
     final puzzleData = json['puzzle_data'];
+
+    // removed_cells가 null이면 빈 리스트 사용
+    final removedCellsList = puzzleData['removed_cells'] as List?;
+    final removedCells =
+        removedCellsList != null
+            ? removedCellsList.map((cell) => RemovedCell.fromJson(cell)).toList()
+            : <RemovedCell>[];
+
     return ChessSudokuPuzzle(
       puzzleId: json['puzzle_id'] as String,
       puzzle: ChessSudokuBoard.fromJson(puzzleData['puzzle']),
       solution: ChessSudokuBoard.fromJson(puzzleData['solution']),
-      removedCells: (puzzleData['removed_cells'] as List).map((cell) => RemovedCell.fromJson(cell)).toList(),
+      removedCells: removedCells,
       difficulty: json['difficulty'] as String,
     );
   }

@@ -24,13 +24,15 @@ class GameBoard extends StatelessWidget {
 
         return LayoutBuilder(
           builder: (context, constraints) {
-            final boardSize = constraints.maxWidth;
-            final cellSize = boardSize / 9;
+            final borderWidth = 2.0;
+            final totalBorderWidth = borderWidth * 2; // 좌우 테두리의 총 너비
+            final availableWidth = constraints.maxWidth - totalBorderWidth;
+            final cellSize = availableWidth / 9;
 
             return Container(
-              width: boardSize,
-              height: boardSize,
-              decoration: BoxDecoration(border: Border.all(color: Colors.black, width: 2)),
+              width: constraints.maxWidth,
+              height: constraints.maxWidth,
+              decoration: BoxDecoration(border: Border.all(color: Colors.black, width: borderWidth)),
               child: Column(
                 children: List.generate(9, (row) {
                   return Row(
@@ -75,8 +77,8 @@ class GameBoard extends StatelessWidget {
         border: Border(
           top: BorderSide(width: row % 3 == 0 ? 2 : 1, color: Colors.black),
           left: BorderSide(width: col % 3 == 0 ? 2 : 1, color: Colors.black),
-          right: BorderSide(width: col == 8 ? 2 : 0, color: Colors.black),
-          bottom: BorderSide(width: row == 8 ? 2 : 0, color: Colors.black),
+          right: BorderSide(width: 1, color: Colors.black),
+          bottom: BorderSide(width: 1, color: Colors.black),
         ),
       ),
     );

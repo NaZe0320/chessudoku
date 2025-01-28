@@ -210,29 +210,63 @@ class ChessSudokuBoard extends Equatable {
   Map<String, dynamic> toJson() {
     return {
       'board': board.map((row) => row.map((cell) => cell is String ? cell : cell?.toString()).toList()).toList(),
-      'piecePositions': piecePositions,
+      'piecePositions': piecePositions.map((key, value) => MapEntry(key, value.map((pos) => pos.toList()).toList())),
     };
   }
 
   /// JSON 역직렬화
-  factory ChessSudokuBoard.fromJson(Map<String, dynamic> json) {
-    return ChessSudokuBoard(
-      board:
-          (json['board'] as List<dynamic>)
-              .map(
-                (row) =>
-                    (row as List<dynamic>)
-                        .map((cell) => cell == 'null' ? null : int.tryParse(cell.toString()) ?? cell)
-                        .toList(),
-              )
-              .toList(),
-      piecePositions: Map<String, List<List<int>>>.from(
-        json['piecePositions'].map(
-          (key, value) =>
-              MapEntry(key, (value as List).map((pos) => (pos as List).map((n) => n as int).toList()).toList()),
-        ),
-      ),
-    );
+  factory ChessSudokuBoard.fromJson(Map<String, dynamic>? json) {
+    if (json == null) {
+      return ChessSudokuBoard();
+    }
+
+    // board 파싱
+    List<List<dynamic>> parsedBoard;
+    try {
+      final boardData = json['board'] as List?;
+      if (boardData == null) {
+        parsedBoard = List.generate(9, (_) => List.filled(9, null));
+      } else {
+        parsedBoard =
+            boardData.map((row) {
+              if (row is! List) return List.filled(9, null);
+              return row.map((cell) {
+                if (cell == null || cell == 'null') return null;
+                // 체스 기물인 경우
+                if (cell is String && pieces.containsValue(cell)) return cell;
+                // 숫자로 변환 시도
+                return int.tryParse(cell.toString());
+              }).toList();
+            }).toList();
+      }
+    } catch (e) {
+      print('Error parsing board: $e');
+      parsedBoard = List.generate(9, (_) => List.filled(9, null));
+    }
+
+    // piecePositions 파싱
+    final Map<String, List<List<int>>> parsedPiecePositions = {'king': [], 'bishop': [], 'knight': [], 'rook': []};
+
+    try {
+      final positionsData = json['piecePositions'] as Map<String, dynamic>?;
+      if (positionsData != null) {
+        positionsData.forEach((key, value) {
+          if (parsedPiecePositions.containsKey(key) && value is List) {
+            parsedPiecePositions[key] =
+                value.map((pos) {
+                  if (pos is List) {
+                    return pos.map((n) => n is int ? n : 0).toList().sublist(0, 2);
+                  }
+                  return <int>[0, 0];
+                }).toList();
+          }
+        });
+      }
+    } catch (e) {
+      print('Error parsing piece positions: $e');
+    }
+
+    return ChessSudokuBoard(board: parsedBoard, piecePositions: parsedPiecePositions);
   }
 
   @override

@@ -18,12 +18,15 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void initState() {
     super.initState();
-    _loadPuzzle();
+    // 빌드가 완료된 후 퍼즐 로드를 실행하도록 스케줄링
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadPuzzle();
+    });
   }
 
   Future<void> _loadPuzzle() async {
     final gameProvider = context.read<GameProvider>();
-    await gameProvider.generateNewPuzzle(difficulty: widget.difficulty);
+    await gameProvider.generatePuzzle(difficulty: widget.difficulty);
   }
 
   @override
@@ -86,9 +89,8 @@ class _GameScreenState extends State<GameScreen> {
                               ],
                             ),
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
                               child: ConstrainedBox(
-                                constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width - 32),
+                                constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width - 24),
                                 child: const AspectRatio(aspectRatio: 1, child: GameBoard()),
                               ),
                             ),
