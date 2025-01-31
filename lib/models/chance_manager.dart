@@ -16,6 +16,30 @@ class ChanceManager {
     _startTimer();
   }
 
+  Future<bool> addChance() async {
+    await _processElapsedTime();
+    final currentChances = _prefs.getInt(_chancesKey) ?? 0;
+
+    if (currentChances < maxChances) {
+      await _prefs.setInt(_chancesKey, currentChances + 1);
+      _updateCallback();
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> useChance() async {
+    await _processElapsedTime();
+    final currentChances = _prefs.getInt(_chancesKey) ?? 0;
+
+    if (currentChances > 0) {
+      await _prefs.setInt(_chancesKey, currentChances - 1);
+      _updateCallback();
+      return true;
+    }
+    return false;
+  }
+
   void setUpdateCallback(Function(int chances, Duration? nextRecharge) callback) {
     _onUpdate = callback;
     _updateCallback();
@@ -74,18 +98,6 @@ class ChanceManager {
         _onUpdate!(chances, null);
       }
     }
-  }
-
-  Future<bool> useChance() async {
-    await _processElapsedTime();
-    final currentChances = _prefs.getInt(_chancesKey) ?? 0;
-
-    if (currentChances > 0) {
-      await _prefs.setInt(_chancesKey, currentChances - 1);
-      _updateCallback();
-      return true;
-    }
-    return false;
   }
 
   void dispose() {

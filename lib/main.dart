@@ -1,11 +1,15 @@
+import 'package:chessudoku/firebase_options.dart';
 import 'package:chessudoku/screens/home_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // 세로 모드로 고정
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
@@ -88,7 +92,7 @@ class AppConstants {
   static const apiBaseUrl = 'http://localhost:5000';
 
   // 난이도 관련 상수
-  static const difficulties = {'easy': '41-46 hints', 'medium': '31-36 hints', 'hard': '21-26 hints'};
+  static const difficulties = {'easy': '51-61 hints', 'medium': '51-41 hints', 'hard': '41-26 hints'};
 
   // 색상 상수
   static const difficultyColors = {'easy': Colors.green, 'medium': Colors.orange, 'hard': Colors.red};

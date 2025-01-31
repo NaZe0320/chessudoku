@@ -1,4 +1,5 @@
 import 'package:chessudoku/models/chance_manager.dart';
+import 'package:chessudoku/services/api_service.dart';
 import 'package:chessudoku/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -14,13 +15,16 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late ChanceManager _chanceManager;
+  late ApiService _apiService;
   int _currentChances = 5;
   Duration? _nextRecharge;
   bool _hasSavedGame = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    _apiService = ApiService();
     _checkSavedGame();
     _initializeChanceManager();
   }
@@ -44,6 +48,22 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> _showRewardedAd() async {
+    // TODO: 광고 SDK 구현
+    // 광고 시청 완료 후 기회 추가
+    setState(() => _isLoading = true);
+    try {
+      await _chanceManager.addChance();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Chance added successfully!')));
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to add chance. Please try again.')));
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
   @override
   void dispose() {
     _chanceManager.dispose();
@@ -52,10 +72,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _startNewGame(BuildContext context) async {
     if (_currentChances > 0) {
-      final success = await _chanceManager.useChance();
-      if (success) {
-        _showDifficultyDialog(context);
-      }
+      //await _chanceManager.useChance();
+      _showDifficultyDialog(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -63,6 +81,36 @@ class _HomeScreenState extends State<HomeScreen> {
           duration: const Duration(seconds: 2),
         ),
       );
+    }
+  }
+
+  Future<void> _startGame(BuildContext context, String difficulty) async {
+    setState(() => _isLoading = true);
+    try {
+      final puzzleData = await _apiService.fetchPuzzle(difficulty);
+
+      // Firebase에서 퍼즐을 성공적으로 받아왔을 때만 기회 소모
+      final success = await _chanceManager.useChance();
+      if (success) {
+        if (!mounted) return;
+        Navigator.of(context).pop(); // 난이도 선택 다이얼로그 닫기
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => GameScreen(
+                  difficulty: difficulty,
+                  //puzzleData: puzzleData,
+                ),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to load puzzle. Please try again.')));
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -112,29 +160,33 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Colors.white.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                    child: Column(
                       children: [
                         Row(
-                          children: List.generate(5, (index) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
-                              child: Text(
-                                '♟',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  color: index < _currentChances ? Colors.white : Colors.white.withOpacity(0.3),
-                                ),
-                              ),
-                            );
-                          }),
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: List.generate(5, (index) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                                  child: Text(
+                                    '♟',
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      color: index < _currentChances ? Colors.white : Colors.white.withOpacity(0.3),
+                                    ),
+                                  ),
+                                );
+                              }),
+                            ),
+                            if (_nextRecharge != null) ...[
+                              const SizedBox(width: 12),
+                              const Icon(Icons.timer, color: Colors.white70, size: 16),
+                              const SizedBox(width: 4),
+                              Text(formatDuration(_nextRecharge!), style: const TextStyle(color: Colors.white70)),
+                            ],
+                          ],
                         ),
-                        if (_nextRecharge != null) ...[
-                          const SizedBox(width: 12),
-                          const Icon(Icons.timer, color: Colors.white70, size: 16),
-                          const SizedBox(width: 4),
-                          Text(formatDuration(_nextRecharge!), style: const TextStyle(color: Colors.white70)),
-                        ],
                       ],
                     ),
                   ),
@@ -222,46 +274,47 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showDifficultyDialog(BuildContext context) {
     showDialog(
       context: context,
+      barrierDismissible: !_isLoading,
       builder:
-          (context) => Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Select Difficulty', style: GoogleFonts.lato(fontSize: 24, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 24),
-                  _DifficultyOption(
-                    difficulty: 'Easy',
-                    description: '41-46 hints',
-                    color: Colors.green,
-                    onTap: () => _startGame(context, 'easy'),
+          (context) => Stack(
+            children: [
+              Dialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Select Difficulty', style: GoogleFonts.lato(fontSize: 24, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 24),
+                      _DifficultyOption(
+                        difficulty: 'Easy',
+                        description: '41-46 hints',
+                        color: Colors.green,
+                        onTap: _isLoading ? null : () => _startGame(context, 'easy'),
+                      ),
+                      const SizedBox(height: 12),
+                      _DifficultyOption(
+                        difficulty: 'Medium',
+                        description: '31-36 hints',
+                        color: Colors.orange,
+                        onTap: _isLoading ? null : () => _startGame(context, 'medium'),
+                      ),
+                      const SizedBox(height: 12),
+                      _DifficultyOption(
+                        difficulty: 'Hard',
+                        description: '21-26 hints',
+                        color: Colors.red,
+                        onTap: _isLoading ? null : () => _startGame(context, 'hard'),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  _DifficultyOption(
-                    difficulty: 'Medium',
-                    description: '31-36 hints',
-                    color: Colors.orange,
-                    onTap: () => _startGame(context, 'medium'),
-                  ),
-                  const SizedBox(height: 12),
-                  _DifficultyOption(
-                    difficulty: 'Hard',
-                    description: '21-26 hints',
-                    color: Colors.red,
-                    onTap: () => _startGame(context, 'hard'),
-                  ),
-                ],
+                ),
               ),
-            ),
+              if (_isLoading) const Positioned.fill(child: Center(child: CircularProgressIndicator())),
+            ],
           ),
     );
-  }
-
-  void _startGame(BuildContext context, String difficulty) {
-    Navigator.of(context).pop(); // 난이도 선택 다이얼로그 닫기
-    Navigator.push(context, MaterialPageRoute(builder: (context) => GameScreen(difficulty: difficulty)));
   }
 }
 
@@ -310,7 +363,7 @@ class _DifficultyOption extends StatelessWidget {
   final String difficulty;
   final String description;
   final Color color;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const _DifficultyOption({
     required this.difficulty,
