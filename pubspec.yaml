@@ -17,6 +17,8 @@ dependencies:
   # 네트워킹
   dio: ^5.7.0             # HTTP 클라이언트
   json_annotation: ^4.9.0  # JSON 직렬화/역직렬화
+  firebase_core: ^2.24.2
+  cloud_firestore: ^4.14.0
 
   # 로컬 저장소
   shared_preferences: ^2.4.0  # 간단한 key-value 저장
