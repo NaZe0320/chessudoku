@@ -72,15 +72,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _startNewGame(BuildContext context) async {
     if (_currentChances > 0) {
-      //await _chanceManager.useChance();
       _showDifficultyDialog(context);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('No chances left! Next chance in: ${formatDuration(_nextRecharge ?? Duration.zero)}'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      _showWatchAdDialog(context);
     }
   }
 
@@ -193,11 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   const SizedBox(height: 32),
                   // 새 게임 시작 버튼
-                  _MenuButton(
-                    icon: Icons.play_arrow,
-                    label: 'New Game ($_currentChances left)',
-                    onPressed: _currentChances > 0 ? () => _startNewGame(context) : null,
-                  ),
+                  _MenuButton(icon: Icons.play_arrow, label: 'New Game', onPressed: () => _startNewGame(context)),
 
                   const SizedBox(height: 16),
 
@@ -268,6 +258,63 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showWatchAdDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Column(
+              children: [
+                const Icon(Icons.video_library, size: 48, color: Colors.blue),
+                const SizedBox(height: 16),
+                const Text('No Chances Left'),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Would you like to watch a video ad to get an extra chance?', textAlign: TextAlign.center),
+                const SizedBox(height: 16),
+                if (_nextRecharge != null) ...[
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.timer, size: 16, color: Colors.grey),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Next free chance in: ${formatDuration(_nextRecharge!)}',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _showRewardedAd().then((_) {
+                    if (_currentChances > 0) {
+                      _showDifficultyDialog(context);
+                    }
+                  });
+                },
+                icon: const Icon(Icons.play_circle_outline),
+                label: const Text('Watch Ad'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
+              ),
+            ],
+            actionsAlignment: MainAxisAlignment.spaceEvenly,
+            actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
     );
   }
 
