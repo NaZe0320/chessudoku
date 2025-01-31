@@ -1,9 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'game_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  bool _hasSavedGame = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkSavedGame();
+  }
+
+  Future<void> _checkSavedGame() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasGame = prefs.getString('game_progress') != null;
+    setState(() {
+      _hasSavedGame = hasGame;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +72,32 @@ class HomeScreen extends StatelessWidget {
                     icon: Icons.play_arrow,
                     label: 'New Game',
                     onPressed: () => _showDifficultyDialog(context),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // 게임 이어하기 버튼
+                  _MenuButton(
+                    icon: Icons.refresh,
+                    label: 'Continue Game',
+                    onPressed:
+                        _hasSavedGame
+                            ? () {
+                              // TODO: Implement continue game logic
+                              // Navigator.push(context, MaterialPageRoute(builder: (context) => const GameScreen()));
+                            }
+                            : null,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // 기록실 버튼
+                  _MenuButton(
+                    icon: Icons.emoji_events,
+                    label: 'Records',
+                    onPressed: () {
+                      // TODO: Navigate to records screen
+                    },
                   ),
 
                   const SizedBox(height: 16),
@@ -147,7 +195,7 @@ class HomeScreen extends StatelessWidget {
 class _MenuButton extends StatelessWidget {
   final IconData icon;
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   const _MenuButton({required this.icon, required this.label, required this.onPressed});
 
@@ -163,13 +211,21 @@ class _MenuButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
           elevation: 3,
+          disabledBackgroundColor: Colors.grey[300],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon),
+            Icon(icon, color: onPressed == null ? Colors.grey : null),
             const SizedBox(width: 8),
-            Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: onPressed == null ? Colors.grey : null,
+              ),
+            ),
           ],
         ),
       ),
