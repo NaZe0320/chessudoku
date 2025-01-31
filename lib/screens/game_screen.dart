@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../providers/game_provider.dart';
-import '../widgets/board/game_board.dart';
 import '../widgets/board/cell.dart';
 
 class GameScreen extends StatefulWidget {
@@ -19,14 +17,7 @@ class _GameScreenState extends State<GameScreen> {
   void initState() {
     super.initState();
     // 빌드가 완료된 후 퍼즐 로드를 실행하도록 스케줄링
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadPuzzle();
-    });
-  }
-
-  Future<void> _loadPuzzle() async {
-    final gameProvider = context.read<GameProvider>();
-    await gameProvider.generatePuzzle(difficulty: widget.difficulty);
+    WidgetsBinding.instance.addPostFrameCallback((_) {});
   }
 
   @override
@@ -46,15 +37,15 @@ class _GameScreenState extends State<GameScreen> {
               // 앱바
               _buildAppBar(context),
 
-              // 게임 상태 표시
-              Consumer<GameProvider>(
-                builder: (context, gameProvider, child) {
-                  if (gameProvider.isLoading) {
-                    return LinearProgressIndicator(backgroundColor: Colors.blue.shade800, color: Colors.white);
-                  }
-                  return const SizedBox(height: 4);
-                },
-              ),
+              // // 게임 상태 표시
+              // Consumer<GameProvider>(
+              //   builder: (context, gameProvider, child) {
+              //     if (gameProvider.isLoading) {
+              //       return LinearProgressIndicator(backgroundColor: Colors.blue.shade800, color: Colors.white);
+              //     }
+              //     return const SizedBox(height: 4);
+              //   },
+              // ),
 
               // 게임 보드
               Expanded(
@@ -91,7 +82,7 @@ class _GameScreenState extends State<GameScreen> {
                             child: ClipRRect(
                               child: ConstrainedBox(
                                 constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width - 24),
-                                child: const AspectRatio(aspectRatio: 1, child: GameBoard()),
+                                child: AspectRatio(aspectRatio: 1, child: Container()),
                               ),
                             ),
                           ),
@@ -103,39 +94,39 @@ class _GameScreenState extends State<GameScreen> {
               ),
 
               // 숫자 입력 패드
-              Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -5))],
-                ),
-                child: Consumer<GameProvider>(
-                  builder: (context, gameProvider, child) {
-                    if (!gameProvider.hasSelectedCell) {
-                      return Container(
-                        height: 200,
-                        padding: const EdgeInsets.all(24),
-                        child: Center(
-                          child: Text(
-                            'Select a cell to enter a number',
-                            style: GoogleFonts.lato(fontSize: 16, color: Colors.grey),
-                          ),
-                        ),
-                      );
-                    }
-
-                    final selectedRow = gameProvider.selectedRow!;
-                    final selectedCol = gameProvider.selectedCol!;
-                    final validNumbers = gameProvider.getValidNumbers(selectedRow, selectedCol);
-
-                    return NumberInputPad(
-                      onNumberSelected: gameProvider.enterNumber,
-                      onErase: gameProvider.eraseNumber,
-                      availableNumbers: validNumbers,
-                    );
-                  },
-                ),
-              ),
+              // Container(
+              //   decoration: const BoxDecoration(
+              //     color: Colors.white,
+              //     borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              //     boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -5))],
+              //   ),
+              //   child: Consumer<GameProvider>(
+              //     builder: (context, gameProvider, child) {
+              //       if (!gameProvider.hasSelectedCell) {
+              //         return Container(
+              //           height: 200,
+              //           padding: const EdgeInsets.all(24),
+              //           child: Center(
+              //             child: Text(
+              //               'Select a cell to enter a number',
+              //               style: GoogleFonts.lato(fontSize: 16, color: Colors.grey),
+              //             ),
+              //           ),
+              //         );
+              //       }
+              //
+              //       final selectedRow = gameProvider.selectedRow!;
+              //       final selectedCol = gameProvider.selectedCol!;
+              //       final validNumbers = gameProvider.getValidNumbers(selectedRow, selectedCol);
+              //
+              //       return NumberInputPad(
+              //         onNumberSelected: gameProvider.enterNumber,
+              //         onErase: gameProvider.eraseNumber,
+              //         availableNumbers: validNumbers,
+              //       );
+              //     },
+              //   ),
+              // ),
             ],
           ),
         ),
@@ -165,21 +156,15 @@ class _GameScreenState extends State<GameScreen> {
           Row(
             children: [
               // 힌트 토글 버튼
-              Consumer<GameProvider>(
-                builder: (context, gameProvider, child) {
-                  return IconButton(
-                    icon: Icon(gameProvider.showHints ? Icons.lightbulb : Icons.lightbulb_outline, color: Colors.white),
-                    onPressed: gameProvider.toggleHints,
-                    tooltip: 'Toggle Hints',
-                  );
-                },
-              ),
-              // 새 게임 버튼
-              IconButton(
-                icon: const Icon(Icons.refresh, color: Colors.white),
-                onPressed: () => _showNewGameConfirmDialog(context),
-                tooltip: 'New Game',
-              ),
+              // Consumer<GameProvider>(
+              //   builder: (context, gameProvider, child) {
+              //     return IconButton(
+              //       icon: Icon(gameProvider.showHints ? Icons.lightbulb : Icons.lightbulb_outline, color: Colors.white),
+              //       onPressed: gameProvider.toggleHints,
+              //       tooltip: 'Toggle Hints',
+              //     );
+              //   },
+              // ),
             ],
           ),
         ],
@@ -198,86 +183,5 @@ class _GameScreenState extends State<GameScreen> {
       default:
         return Colors.white;
     }
-  }
-
-  void _showNewGameConfirmDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Start New Game?', style: GoogleFonts.lato(fontSize: 24, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
-                  const Text('Current progress will be lost.', style: TextStyle(color: Colors.grey)),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _loadPuzzle();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue.shade700,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text('New Game'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-    );
-  }
-
-  void _showGameCompleteDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder:
-          (context) => Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.celebration, size: 64, color: Colors.amber),
-                  const SizedBox(height: 16),
-                  Text('Congratulations!', style: GoogleFonts.lato(fontSize: 24, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Text('You have completed the puzzle!', style: GoogleFonts.lato(color: Colors.grey)),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Continue')),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _loadPuzzle();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue.shade700,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text('New Game'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-    );
   }
 }

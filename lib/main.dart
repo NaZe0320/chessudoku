@@ -1,4 +1,3 @@
-import 'package:chessudoku/providers/game_provider.dart';
 import 'package:chessudoku/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -25,7 +24,7 @@ class ChessSudokuApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => GameProvider())],
+      providers: [],
       child: MaterialApp(
         title: 'Chess Sudoku',
         debugShowCheckedModeBanner: false,
