@@ -1,3 +1,5 @@
+import 'package:chessudoku/models/chance_manager.dart';
+import 'package:chessudoku/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,12 +13,16 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  late ChanceManager _chanceManager;
+  int _currentChances = 5;
+  Duration? _nextRecharge;
   bool _hasSavedGame = false;
 
   @override
   void initState() {
     super.initState();
     _checkSavedGame();
+    _initializeChanceManager();
   }
 
   Future<void> _checkSavedGame() async {
@@ -25,6 +31,39 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _hasSavedGame = hasGame;
     });
+  }
+
+  Future<void> _initializeChanceManager() async {
+    final prefs = await SharedPreferences.getInstance();
+    _chanceManager = ChanceManager(prefs);
+    _chanceManager.setUpdateCallback((chances, nextRecharge) {
+      setState(() {
+        _currentChances = chances;
+        _nextRecharge = nextRecharge;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _chanceManager.dispose();
+    super.dispose();
+  }
+
+  Future<void> _startNewGame(BuildContext context) async {
+    if (_currentChances > 0) {
+      final success = await _chanceManager.useChance();
+      if (success) {
+        _showDifficultyDialog(context);
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No chances left! Next chance in: ${formatDuration(_nextRecharge ?? Duration.zero)}'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   @override
@@ -41,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.all(16.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -65,13 +104,47 @@ class _HomeScreenState extends State<HomeScreen> {
                     textAlign: TextAlign.center,
                   ),
 
-                  const SizedBox(height: 64),
+                  const SizedBox(height: 32),
+                  // 폰 기회 표시
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: List.generate(5, (index) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              child: Text(
+                                '♟',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  color: index < _currentChances ? Colors.white : Colors.white.withOpacity(0.3),
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                        if (_nextRecharge != null) ...[
+                          const SizedBox(width: 12),
+                          const Icon(Icons.timer, color: Colors.white70, size: 16),
+                          const SizedBox(width: 4),
+                          Text(formatDuration(_nextRecharge!), style: const TextStyle(color: Colors.white70)),
+                        ],
+                      ],
+                    ),
+                  ),
 
+                  const SizedBox(height: 32),
                   // 새 게임 시작 버튼
                   _MenuButton(
                     icon: Icons.play_arrow,
-                    label: 'New Game',
-                    onPressed: () => _showDifficultyDialog(context),
+                    label: 'New Game ($_currentChances left)',
+                    onPressed: _currentChances > 0 ? () => _startNewGame(context) : null,
                   ),
 
                   const SizedBox(height: 16),
@@ -208,7 +281,7 @@ class _MenuButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           foregroundColor: Colors.blue.shade900,
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
           elevation: 3,
           disabledBackgroundColor: Colors.grey[300],

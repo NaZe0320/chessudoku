@@ -7,12 +7,11 @@ int getRandomInt(int min, int max) {
 }
 
 /// 밀리초를 MM:SS 형식의 문자열로 변환합니다.
-String formatDuration(int milliseconds) {
-  final seconds = (milliseconds / 1000).floor();
-  final minutes = (seconds / 60).floor();
-  final remainingSeconds = seconds % 60;
-
-  return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+String formatDuration(Duration duration) {
+  final hours = duration.inHours;
+  final minutes = (duration.inMinutes % 60).toString().padLeft(2, '0');
+  final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
+  return '$hours:$minutes:$seconds';
 }
 
 /// 숫자를 자릿수 단위로 포맷팅합니다. (예: 1000 -> 1,000)
