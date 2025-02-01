@@ -82,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _startGame(BuildContext context, String difficulty) async {
     setState(() => _isLoading = true);
     try {
-      // final puzzleData = await _apiService.fetchPuzzle(difficulty);
+      final puzzleData = await _apiService.fetchPuzzle(difficulty);
 
       // Firebase에서 퍼즐을 성공적으로 받아왔을 때만 기회 소모
       final success = await _chanceManager.useChance();
