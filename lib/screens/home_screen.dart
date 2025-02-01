@@ -1,4 +1,5 @@
 import 'package:chessudoku/models/chance_manager.dart';
+import 'package:chessudoku/screens/watch_ad_dialog.dart';
 import 'package:chessudoku/services/api_service.dart';
 import 'package:chessudoku/utils/helpers.dart';
 import 'package:flutter/material.dart';
@@ -81,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _startGame(BuildContext context, String difficulty) async {
     setState(() => _isLoading = true);
     try {
-      final puzzleData = await _apiService.fetchPuzzle(difficulty);
+      // final puzzleData = await _apiService.fetchPuzzle(difficulty);
 
       // Firebase에서 퍼즐을 성공적으로 받아왔을 때만 기회 소모
       final success = await _chanceManager.useChance();
@@ -90,13 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Navigator.of(context).pop(); // 난이도 선택 다이얼로그 닫기
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder:
-                (context) => GameScreen(
-                  difficulty: difficulty,
-                  //puzzleData: puzzleData,
-                ),
-          ),
+          MaterialPageRoute(builder: (context) => GameScreen(difficulty: difficulty /*puzzleData: puzzleData*/)),
         );
       }
     } catch (e) {
@@ -265,55 +260,16 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: Column(
-              children: [
-                const Icon(Icons.video_library, size: 48, color: Colors.blue),
-                const SizedBox(height: 16),
-                const Text('No Chances Left'),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Would you like to watch a video ad to get an extra chance?', textAlign: TextAlign.center),
-                const SizedBox(height: 16),
-                if (_nextRecharge != null) ...[
-                  const Divider(),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.timer, size: 16, color: Colors.grey),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Next free chance in: ${formatDuration(_nextRecharge!)}',
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _showRewardedAd().then((_) {
-                    if (_currentChances > 0) {
-                      _showDifficultyDialog(context);
-                    }
-                  });
-                },
-                icon: const Icon(Icons.play_circle_outline),
-                label: const Text('Watch Ad'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
-              ),
-            ],
-            actionsAlignment: MainAxisAlignment.spaceEvenly,
-            actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          (context) => WatchAdDialog(
+            nextRecharge: _nextRecharge,
+            onWatchAd: () {
+              Navigator.pop(context);
+              _showRewardedAd().then((_) {
+                if (_currentChances > 0) {
+                  _showDifficultyDialog(context);
+                }
+              });
+            },
           ),
     );
   }
