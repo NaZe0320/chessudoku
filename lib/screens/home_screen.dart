@@ -85,19 +85,20 @@ class _HomeScreenState extends State<HomeScreen> {
       final puzzleData = await _apiService.fetchPuzzle(difficulty);
 
       // Firebase에서 퍼즐을 성공적으로 받아왔을 때만 기회 소모
-      final success = await _chanceManager.useChance();
+      final success = true; //TODO: await _chanceManager.useChance();
       if (success) {
         if (!mounted) return;
         Navigator.of(context).pop(); // 난이도 선택 다이얼로그 닫기
+
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => GameScreen(difficulty: difficulty /*puzzleData: puzzleData*/)),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Failed to load puzzle. Please try again.')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load puzzle: ${e.toString()}')));
+      }
     } finally {
       setState(() => _isLoading = false);
     }
