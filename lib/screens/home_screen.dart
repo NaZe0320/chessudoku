@@ -1,6 +1,8 @@
 import 'package:chessudoku/models/chance_manager.dart';
+import 'package:chessudoku/models/game_state.dart';
 import 'package:chessudoku/screens/watch_ad_dialog.dart';
 import 'package:chessudoku/services/api_service.dart';
+import 'package:chessudoku/utils/converts.dart';
 import 'package:chessudoku/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -193,7 +195,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     label: 'Continue Game',
                     onPressed:
                         _hasSavedGame
-                            ? () {
+                            ? () async {
+                              final prefs = (await SharedPreferences.getInstance()).getString('game_progress');
+                              print("TEST: ${convertJsonToGameState(prefs!)}");
                               // TODO: Implement continue game logic
                               // Navigator.push(context, MaterialPageRoute(builder: (context) => const GameScreen()));
                             }
