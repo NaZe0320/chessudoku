@@ -1,45 +1,59 @@
 import 'package:chessudoku/enums/chess_piece.dart';
+import 'package:chessudoku/providers/game_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:chessudoku/models/board.dart';
 import 'package:chessudoku/models/cell.dart';
+import 'package:provider/provider.dart';
 
 class SudokuBoard extends StatelessWidget {
-  final Board board;
-  final Function(int row, int col)? onCellTap;
-
-  const SudokuBoard({super.key, required this.board, this.onCellTap});
+  const SudokuBoard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 1, // 정사각형 보드
-      child: Container(
-        decoration: BoxDecoration(border: Border.all(color: Colors.black, width: 2)),
-        child: GridView.builder(
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 9),
-          itemCount: 81,
-          itemBuilder: (context, index) {
-            final row = index ~/ 9;
-            final col = index % 9;
-            return _buildCell(row, col);
-          },
-        ),
-      ),
+    return Consumer<GameProvider>(
+      builder: (context, gameProvider, child) {
+        return AspectRatio(
+          aspectRatio: 1, // 정사각형 보드
+          child: Container(
+            decoration: BoxDecoration(border: Border.all(color: Colors.black, width: 2)),
+            child: GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 9),
+              itemCount: 81,
+              itemBuilder: (context, index) {
+                final row = index ~/ 9;
+                final col = index % 9;
+                return _buildCell(row, col, gameProvider);
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildCell(int row, int col) {
-    final cell = board.getCell(row, col);
+  Widget _buildCell(int row, int col, GameProvider gameProvider) {
+    final cell = gameProvider.currentBoard.getCell(row, col);
+    final isSelected = gameProvider.isCellSelected(row, col);
+    final isHighlighted = gameProvider.isCellHighlighted(row, col);
+
     // 3x3 박스 구분을 위한 테두리 설정
     final borderSide = BorderSide(color: Colors.grey.shade400, width: 0.5);
-
     final boldBorderSide = BorderSide(color: Colors.grey.shade400, width: 2.0);
 
+    // 셀 배경색 결정
+    Color backgroundColor = Colors.white;
+    if (isSelected) {
+      backgroundColor = Colors.blue.shade200; // 선택된 셀
+    } else if (isHighlighted) {
+      backgroundColor = Colors.blue.shade50; // 하이라이트된 셀 (연한 파란색)
+    }
+
     return GestureDetector(
-      onTap: () => onCellTap?.call(row, col),
+      onTap: () => gameProvider.selectCell(row, col),
       child: Container(
         decoration: BoxDecoration(
+          color: backgroundColor,
           border: Border(
             top: row % 3 == 0 ? boldBorderSide : borderSide,
             left: col % 3 == 0 ? boldBorderSide : borderSide,

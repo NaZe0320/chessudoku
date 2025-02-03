@@ -5,7 +5,7 @@ import 'package:chessudoku/models/board.dart';
 import 'package:chessudoku/models/cell.dart';
 import 'package:chessudoku/enums/cell_type.dart';
 import 'package:chessudoku/enums/chess_piece.dart';
-import 'package:chessudoku/providers/game_provider.dart';
+import 'package:chessudoku/providers/game_2_provider.dart';
 
 class GameScreen2 extends StatefulWidget {
   final String difficulty;
@@ -30,7 +30,7 @@ class _GameScreen2State extends State<GameScreen2> {
   }
 
   Future<void> _initializeGame() async {
-    final gameProvider = context.read<GameProvider>();
+    final gameProvider = context.read<GameProvider2>();
 
     // TODO: API에서 퍼즐 데이터를 가져오는 로직 구현
     // 임시 테스트 데이터
@@ -49,7 +49,7 @@ class _GameScreen2State extends State<GameScreen2> {
       backgroundColor: Colors.grey[100],
       appBar: _buildAppBar(),
       body: SafeArea(
-        child: Consumer<GameProvider>(
+        child: Consumer<GameProvider2>(
           builder: (context, gameProvider, child) {
             if (gameProvider.isLoading) {
               return const Center(child: CircularProgressIndicator());
@@ -104,7 +104,7 @@ class _GameScreen2State extends State<GameScreen2> {
     );
   }
 
-  Widget _buildInfoPanel(GameProvider gameProvider) {
+  Widget _buildInfoPanel(GameProvider2 gameProvider) {
     return Container(
       padding: const EdgeInsets.all(16),
       color: Colors.white,
@@ -122,7 +122,7 @@ class _GameScreen2State extends State<GameScreen2> {
     );
   }
 
-  Widget _buildGameBoard(BuildContext context, GameProvider gameProvider) {
+  Widget _buildGameBoard(BuildContext context, GameProvider2 gameProvider) {
     final board = gameProvider.gameState!.currentBoard;
     final selectedCell = gameProvider.gameState!.selectedCell;
 
@@ -160,7 +160,7 @@ class _GameScreen2State extends State<GameScreen2> {
     int col,
     bool isSelected,
     bool isIncorrect,
-    GameProvider gameProvider,
+    GameProvider2 gameProvider,
   ) {
     // 3x3 박스 구분을 위한 테두리 설정
     final rightBorder = (col + 1) % 3 == 0 && col < 8;
@@ -228,7 +228,7 @@ class _GameScreen2State extends State<GameScreen2> {
     }
   }
 
-  Widget _buildNumberPad(BuildContext context, GameProvider gameProvider) {
+  Widget _buildNumberPad(BuildContext context, GameProvider2 gameProvider) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -261,7 +261,7 @@ class _GameScreen2State extends State<GameScreen2> {
     );
   }
 
-  Widget _buildNumberButton(BuildContext context, int number, GameProvider gameProvider) {
+  Widget _buildNumberButton(BuildContext context, int number, GameProvider2 gameProvider) {
     final isEnabled = gameProvider.hasSelectedCell;
 
     return Expanded(
@@ -282,7 +282,7 @@ class _GameScreen2State extends State<GameScreen2> {
     );
   }
 
-  Widget _buildEraseButton(BuildContext context, GameProvider gameProvider) {
+  Widget _buildEraseButton(BuildContext context, GameProvider2 gameProvider) {
     final isEnabled = gameProvider.hasSelectedCell;
 
     return Expanded(
@@ -304,7 +304,7 @@ class _GameScreen2State extends State<GameScreen2> {
   }
 
   Future<void> _checkBoard(BuildContext context) async {
-    final gameProvider = context.read<GameProvider>();
+    final gameProvider = context.read<GameProvider2>();
     final incorrectCells = await gameProvider.checkCurrentBoard();
 
     setState(() {
