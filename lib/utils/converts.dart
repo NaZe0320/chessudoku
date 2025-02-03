@@ -1,45 +1,102 @@
-import 'dart:convert';
+import 'package:chessudoku/enums/cell_type.dart';
+import 'package:chessudoku/enums/chess_piece.dart';
+import 'package:chessudoku/enums/game_status.dart';
+import 'package:chessudoku/models/board.dart';
+import 'package:chessudoku/models/cell.dart';
 import 'package:chessudoku/models/game_state.dart';
+import 'dart:convert';
 
-GameState convertJsonToGameState(String jsonString) {
-  // JSON 문자열을 Map으로 디코딩
-  final Map<String, dynamic> jsonMap = json.decode(jsonString);
+ChessPiece _getPieceType(String pieceName) {
+  switch (pieceName.toLowerCase()) {
+    case 'king':
+      return ChessPiece.king;
+    case 'bishop':
+      return ChessPiece.bishop;
+    case 'knight':
+      return ChessPiece.knight;
+    case 'rook':
+      return ChessPiece.rook;
+    default:
+      throw Exception('Unknown piece type: $pieceName');
+  }
+}
 
-  // Board 객체들의 JSON을 완성
-  // 현재 JSON이 불완전해 보이므로, 나머지 셀들을 빈 셀로 채움
-  final int boardSize = 9;
-  List<List<Map<String, dynamic>>> completeCells = List.generate(
-    boardSize,
-    (i) =>
-        List.generate(boardSize, (j) => {'type': 'CellType.empty', 'number': null, 'piece': null, 'isInitial': false}),
+GameState convertPuzzleToGameState(Map<String, dynamic> puzzleData) {
+  final String puzzleId = puzzleData['id'] ?? DateTime.now().toString();
+  final pieces = puzzleData['pieces'] as Map<String, dynamic>;
+  final removedCells =
+      (puzzleData['removedCells'] as List<dynamic>)
+          .map((cell) => MapEntry(cell['row'] as int, cell['col'] as int))
+          .toList();
+
+  // 9x9 보드 초기화
+  final initialBoardCells = List.generate(9, (row) => List.generate(9, (col) => Cell(type: CellType.empty)));
+
+  // solution board 초기화 (모든 셀을 1-9로 채움)
+  final solutionBoardCells = List.generate(
+    9,
+    (row) => List.generate(
+      9,
+      (col) => Cell(
+        type: CellType.filled,
+        number: ((row * 3 + row / 3 + col) % 9 + 1).floor(), // 임시로 1-9 채우기
+        isInitial: false,
+      ),
+    ),
   );
 
-  // 주어진 JSON의 cells 데이터로 업데이트
-  if (jsonMap['initialBoard'] != null && jsonMap['initialBoard']['cells'] != null) {
-    var sourceCells = jsonMap['initialBoard']['cells'];
-    for (var i = 0; i < sourceCells.length; i++) {
-      for (var j = 0; j < sourceCells[i].length; j++) {
-        completeCells[i][j] = sourceCells[i][j];
+  // 체스 기물 배치
+  pieces.forEach((pieceName, positions) {
+    final pieceType = _getPieceType(pieceName);
+    (positions as List<dynamic>).forEach((pos) {
+      final row = pos['row'] as int;
+      final col = pos['col'] as int;
+
+      initialBoardCells[row][col] = Cell(type: CellType.piece, piece: pieceType, isInitial: true);
+
+      solutionBoardCells[row][col] = Cell(type: CellType.piece, piece: pieceType, isInitial: true);
+    });
+  });
+
+  // removedCells를 제외한 나머지 셀들을 initial 타입으로 설정
+  for (int row = 0; row < 9; row++) {
+    for (int col = 0; col < 9; col++) {
+      if (initialBoardCells[row][col].type != CellType.piece) {
+        bool isRemoved = removedCells.any((cell) => cell.key == row && cell.value == col);
+
+        if (!isRemoved) {
+          initialBoardCells[row][col] = Cell(
+            type: CellType.initial,
+            number: solutionBoardCells[row][col].number,
+            isInitial: true,
+          );
+        }
       }
     }
   }
 
-  // 완성된 보드 JSON 생성
-  final completeBoard = {'cells': completeCells};
+  final initialBoard = Board(cells: initialBoardCells);
+  final solutionBoard = Board(cells: solutionBoardCells);
 
-  // GameState 생성을 위한 완성된 JSON 맵 생성
-  final completeJsonMap = {
-    'puzzleId': jsonMap['puzzleId'] ?? 'default_puzzle',
-    'status': jsonMap['status'] ?? 'GameStatus.playing',
-    'initialBoard': completeBoard,
-    'currentBoard': completeBoard, // 초기에는 initialBoard와 동일
-    'solutionBoard': completeBoard, // 실제 솔루션은 별도로 설정 필요
-    'hintsUsed': 0,
-    'startTime': DateTime.now().toIso8601String(),
-    'elapsedSeconds': 0,
-    'selectedCell': [-1, -1],
-  };
+  return GameState(
+    puzzleId: puzzleId,
+    status: GameStatus.playing,
+    initialBoard: initialBoard,
+    currentBoard: initialBoard,
+    solutionBoard: solutionBoard,
+    startTime: DateTime.now(),
+    selectedCell: [-1, -1],
+    hintsUsed: 0,
+    elapsedSeconds: 0,
+  );
+}
 
-  // GameState 객체 생성 및 반환
-  return GameState.fromJson(completeJsonMap);
+GameState? convertJsonToGameState(String jsonString) {
+  try {
+    final Map<String, dynamic> json = jsonDecode(jsonString);
+    return GameState.fromJson(json);
+  } catch (e) {
+    print('Error converting JSON to GameState: $e');
+    return null;
+  }
 }

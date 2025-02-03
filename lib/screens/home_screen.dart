@@ -1,5 +1,6 @@
 import 'package:chessudoku/models/chance_manager.dart';
 import 'package:chessudoku/models/game_state.dart';
+import 'package:chessudoku/screens/game_screen.dart';
 import 'package:chessudoku/screens/watch_ad_dialog.dart';
 import 'package:chessudoku/services/api_service.dart';
 import 'package:chessudoku/utils/converts.dart';
@@ -7,7 +8,7 @@ import 'package:chessudoku/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'game_screen.dart';
+import 'game_screen_2.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -92,13 +93,13 @@ class _HomeScreenState extends State<HomeScreen> {
         if (!mounted) return;
         Navigator.of(context).pop(); // 난이도 선택 다이얼로그 닫기
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => GameScreen(difficulty: difficulty /*puzzleData: puzzleData*/)),
-        );
+        final gameState = convertPuzzleToGameState(puzzleData);
+
+        Navigator.push(context, MaterialPageRoute(builder: (context) => GameScreen(gameState: gameState)));
       }
     } catch (e) {
       if (mounted) {
+        print("ERROR : $e");
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load puzzle: ${e.toString()}')));
       }
     } finally {
@@ -196,10 +197,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     onPressed:
                         _hasSavedGame
                             ? () async {
-                              final prefs = (await SharedPreferences.getInstance()).getString('game_progress');
-                              print("TEST: ${convertJsonToGameState(prefs!)}");
-                              // TODO: Implement continue game logic
-                              // Navigator.push(context, MaterialPageRoute(builder: (context) => const GameScreen()));
+                              final prefs = await SharedPreferences.getInstance();
+                              final savedGameJson = prefs.getString('game_progress');
+                              if (savedGameJson != null) {
+                                final savedGameState = convertJsonToGameState(savedGameJson);
+                                if (savedGameState != null) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => GameScreen(gameState: savedGameState)),
+                                  );
+                                }
+                              }
                             }
                             : null,
                   ),
