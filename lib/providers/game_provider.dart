@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:chessudoku/enums/game_status.dart';
+import 'package:chessudoku/models/move.dart';
+import 'package:chessudoku/models/move_history.dart';
 import 'package:chessudoku/services/storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:chessudoku/models/game_state.dart';
@@ -36,9 +38,10 @@ class GameProvider extends ChangeNotifier {
   Board get currentBoard => _gameState.currentBoard;
   bool get isPaused => _pauseTime != null;
   bool get isMemoMode => _isMemoMode;
+  bool get canUndo => _gameState.canUndo;
 
   // 게임 상태 저장
-  Future<void> _saveGameProgress() async {
+  Future<void> saveGameProgress() async {
     try {
       await _storageService.saveGameProgress(_gameState);
     } catch (e) {
@@ -89,7 +92,7 @@ class GameProvider extends ChangeNotifier {
       final now = DateTime.now();
       _accumulatedSeconds += now.difference(_startTime!).inSeconds;
       _startTime = null;
-      _saveGameProgress();
+      saveGameProgress();
     }
   }
 
@@ -110,7 +113,13 @@ class GameProvider extends ChangeNotifier {
   // 게임 종료
   void completeGame() async {
     _timer?.cancel();
-    _updateGameState(_gameState.copyWith(status: GameStatus.completed, elapsedSeconds: _gameState.elapsedSeconds));
+    _updateGameState(
+      _gameState.copyWith(
+        status: GameStatus.completed,
+        elapsedSeconds: _gameState.elapsedSeconds,
+        moveHistory: const MoveHistory(), // 게임 완료시 히스토리 초기화
+      ),
+    );
 
     // 게임 완료 시 저장된 게임 상태 삭제
     await _storageService.clearGameProgress();
@@ -179,7 +188,6 @@ class GameProvider extends ChangeNotifier {
   }
 
   // 숫자 입력
-  // 숫자 입력 메서드 수정
   void inputNumber(int number) {
     if (!hasSelectedCell) return;
 
@@ -468,6 +476,34 @@ class GameProvider extends ChangeNotifier {
   // 메모 모드 토글
   void toggleMemoMode() {
     _isMemoMode = !_isMemoMode;
+    notifyListeners();
+  }
+
+  /// ----------------------------------------- 되돌리기 기능 ------------------------------------------
+
+  void _addMove(int row, int col, Cell previousCell, Cell newCell) {
+    final move = Move(row: row, col: col, previousCell: previousCell, newCell: newCell);
+
+    final newHistory = MoveHistory(moves: List.from(_gameState.moveHistory.moves)..add(move));
+
+    _updateGameState(_gameState.copyWith(moveHistory: newHistory));
+  }
+
+  void undo() {
+    final currentHistory = _gameState.moveHistory;
+    final lastMove = currentHistory.undo();
+    if (lastMove == null) return;
+
+    final newBoard = currentBoard.updateCell(lastMove.row, lastMove.col, lastMove.previousCell);
+
+    // 새로운 MoveHistory 생성 (마지막 move가 제거된 상태)
+    final newHistory = MoveHistory(moves: List.from(currentHistory.moves));
+
+    _updateGameState(_gameState.copyWith(currentBoard: newBoard, moveHistory: newHistory));
+
+    // 입력된 셀과 관련된 모든 셀들의 유효성 다시 검사
+    _validateRelatedCells(lastMove.row, lastMove.col);
+
     notifyListeners();
   }
 }

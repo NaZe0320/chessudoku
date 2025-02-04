@@ -1,5 +1,4 @@
 import 'package:chessudoku/models/chance_manager.dart';
-import 'package:chessudoku/models/game_state.dart';
 import 'package:chessudoku/screens/game_screen.dart';
 import 'package:chessudoku/screens/watch_ad_dialog.dart';
 import 'package:chessudoku/services/api_service.dart';
@@ -8,7 +7,6 @@ import 'package:chessudoku/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'game_screen_2.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

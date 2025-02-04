@@ -72,6 +72,15 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                     elevation: 0,
                     backgroundColor: Colors.blue.shade900,
                     foregroundColor: Colors.white,
+                    leading: IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () async {
+                        await provider.saveGameProgress();
+                        if (context.mounted) {
+                          Navigator.of(context).pop();
+                        }
+                      },
+                    ),
                     actions: [
                       Consumer<GameProvider>(
                         builder:

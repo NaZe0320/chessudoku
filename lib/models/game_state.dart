@@ -1,4 +1,5 @@
 import 'package:chessudoku/enums/cell_type.dart';
+import 'package:chessudoku/models/move_history.dart';
 import 'package:equatable/equatable.dart';
 import 'package:chessudoku/models/board.dart';
 import 'package:chessudoku/enums/game_status.dart';
@@ -13,6 +14,7 @@ class GameState extends Equatable {
   final DateTime startTime;
   final int elapsedSeconds;
   final List<int> selectedCell;
+  final MoveHistory moveHistory;
 
   const GameState({
     required this.puzzleId,
@@ -24,11 +26,13 @@ class GameState extends Equatable {
     required this.startTime,
     this.elapsedSeconds = 0,
     this.selectedCell = const [-1, -1],
+    this.moveHistory = const MoveHistory(),
   });
 
   bool get isCompleted => status == GameStatus.completed;
   bool get isPlaying => status == GameStatus.playing;
   bool get hasSelectedCell => selectedCell[0] != -1 && selectedCell[1] != -1;
+  bool get canUndo => moveHistory.canUndo;
 
   CellType? get selectedCellType {
     if (!hasSelectedCell) return null;
@@ -46,6 +50,7 @@ class GameState extends Equatable {
       'startTime': startTime.toIso8601String(),
       'elapsedSeconds': elapsedSeconds,
       'selectedCell': selectedCell,
+      'moveHistory': moveHistory.toJson(),
     };
   }
 
@@ -60,6 +65,7 @@ class GameState extends Equatable {
       startTime: DateTime.parse(json['startTime']),
       elapsedSeconds: json['elapsedSeconds'],
       selectedCell: List<int>.from(json['selectedCell']),
+      moveHistory: MoveHistory.fromJson(json['moveHistory']),
     );
   }
 
@@ -73,6 +79,7 @@ class GameState extends Equatable {
     DateTime? startTime,
     int? elapsedSeconds,
     List<int>? selectedCell,
+    MoveHistory? moveHistory,
   }) {
     return GameState(
       puzzleId: puzzleId ?? this.puzzleId,
@@ -84,6 +91,7 @@ class GameState extends Equatable {
       startTime: startTime ?? this.startTime,
       elapsedSeconds: elapsedSeconds ?? this.elapsedSeconds,
       selectedCell: selectedCell ?? this.selectedCell,
+      moveHistory: moveHistory ?? this.moveHistory,
     );
   }
 
@@ -98,5 +106,6 @@ class GameState extends Equatable {
     startTime,
     elapsedSeconds,
     selectedCell,
+    moveHistory,
   ];
 }
