@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:chessudoku/enums/game_status.dart';
+import 'package:chessudoku/services/storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:chessudoku/models/game_state.dart';
 import 'package:chessudoku/models/cell.dart';
@@ -7,16 +11,132 @@ import 'package:chessudoku/enums/cell_type.dart';
 class GameProvider extends ChangeNotifier {
   final BuildContext _context;
   GameState _gameState;
-  Set<String> _highlightedCells = {};
-  Set<String> _wrongCells = {};
+  final StorageService _storageService;
+  final Set<String> _highlightedCells = {};
+  final Set<String> _wrongCells = {};
 
-  GameProvider(this._gameState, this._context);
+  Timer? _timer;
+  DateTime? _startTime;
+  // 사용자가 수동으로 일시정지했는지 여부
+  DateTime? _pauseTime;
+  // 앱이 백그라운드로 갔는지 여부
+  bool _isBackgrounded = false;
+  int _accumulatedSeconds = 0;
+
+  GameProvider(this._gameState, this._context, this._storageService) {
+    _accumulatedSeconds = _gameState.elapsedSeconds;
+    startTimer();
+  }
 
   // Getters
   GameState get gameState => _gameState;
   bool get hasSelectedCell => _gameState.hasSelectedCell;
   List<int> get selectedCell => _gameState.selectedCell;
   Board get currentBoard => _gameState.currentBoard;
+  bool get isPaused => _pauseTime != null;
+
+  // 게임 상태 저장
+  Future<void> _saveGameProgress() async {
+    try {
+      await _storageService.saveGameProgress(_gameState);
+    } catch (e) {
+      print('Error saving game progress: $e');
+    }
+  }
+
+  /// ----------------------------------------- 타이머 -------------------------------------------
+
+  // 타이머 일시정지 (사용자 수동)
+  void pauseTimer() {
+    if (_pauseTime != null) return;
+    _stopTimer();
+    _pauseTime = DateTime.now();
+    notifyListeners();
+  }
+
+  // 타이머 재개 (사용자 수동)
+  void resumeTimer() {
+    if (_pauseTime == null) return;
+    _accumulatedSeconds += DateTime.now().difference(_pauseTime!).inSeconds;
+    _pauseTime = null;
+    startTimer();
+    notifyListeners();
+  }
+
+  // 앱이 백그라운드로 갈 때
+  void onBackground() {
+    if (_isBackgrounded) return;
+    _isBackgrounded = true;
+    _stopTimer();
+  }
+
+  // 앱이 포그라운드로 돌아올 때
+  void onForeground() {
+    if (!_isBackgrounded) return;
+    _isBackgrounded = false;
+    if (!isPaused) {
+      // 사용자가 수동으로 일시정지하지 않은 경우에만 재개
+      startTimer();
+    }
+  }
+
+  // 타이머 중지 로직 (공통)
+  void _stopTimer() {
+    _timer?.cancel();
+    if (_startTime != null) {
+      final now = DateTime.now();
+      _accumulatedSeconds += now.difference(_startTime!).inSeconds;
+      _startTime = null;
+      _saveGameProgress();
+    }
+  }
+
+  void startTimer() {
+    if (_isBackgrounded || isPaused) return; // 백그라운드 상태나 일시정지 상태면 시작하지 않음
+
+    _startTime = DateTime.now();
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_startTime != null) {
+        final currentElapsed = _accumulatedSeconds + DateTime.now().difference(_startTime!).inSeconds;
+        _updateGameState(_gameState.copyWith(elapsedSeconds: currentElapsed));
+        notifyListeners();
+      }
+    });
+  }
+
+  // 게임 종료
+  void completeGame() async {
+    _timer?.cancel();
+    _updateGameState(_gameState.copyWith(status: GameStatus.completed, elapsedSeconds: _gameState.elapsedSeconds));
+
+    // 게임 완료 시 저장된 게임 상태 삭제
+    await _storageService.clearGameProgress();
+
+    // 완료 메시지 표시
+    if (_context.mounted) {
+      ScaffoldMessenger.of(_context).showSnackBar(
+        const SnackBar(content: Text('Congratulations! You completed the puzzle!'), duration: Duration(seconds: 3)),
+      );
+    }
+  }
+
+  // Provider dispose 시 타이머 정리
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  // 경과 시간을 문자열로 변환하는 유틸리티 메서드
+  String get formattedTime {
+    final seconds = _gameState.elapsedSeconds;
+    final minutes = seconds ~/ 60;
+    final remainingSeconds = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
+  /// ----------------------------------------- 셀 입력 ------------------------------------------
 
   // 셀이 잘못 입력되었는지 확인
   bool isCellWrong(int row, int col) {
@@ -79,6 +199,11 @@ class GameProvider extends ChangeNotifier {
 
     // 잘못된 입력 표시 초기화
     _wrongCells.remove('$row,$col');
+
+    // 게임 완료 체크
+    if (_isGameComplete()) {
+      completeGame();
+    }
 
     notifyListeners();
   }
@@ -291,5 +416,35 @@ class GameProvider extends ChangeNotifier {
         }
       }
     }
+  }
+
+  bool _isGameComplete() {
+    // 스도쿠 보드의 모든 셀을 검사
+    for (var i = 0; i < Board.size; i++) {
+      for (var j = 0; j < Board.size; j++) {
+        final cell = currentBoard.getCell(i, j);
+
+        // 비어있는 셀이 있으면 완료되지 않은 상태
+        if (cell.type == CellType.empty) {
+          return false;
+        }
+
+        // 체스 기물이 없고 숫자가 없는 셀이 있으면 완료되지 않은 상태
+        if (cell.piece == null && cell.number == null) {
+          return false;
+        }
+      }
+    }
+
+    // 현재 입력된 숫자들의 유효성 검사
+    checkCurrentInput();
+
+    // 잘못된 입력(wrongCells)이 있으면 완료되지 않은 상태
+    if (_wrongCells.isNotEmpty) {
+      return false;
+    }
+
+    // 모든 검사를 통과하면 게임 완료
+    return true;
   }
 }
