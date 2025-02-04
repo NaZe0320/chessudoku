@@ -67,6 +67,24 @@ class BoardCell extends StatelessWidget {
       );
     }
 
+    // 메모가 있을 경우 메모 그리드 표시
+    if (cell.memos.isNotEmpty) {
+      return GridView.count(
+        crossAxisCount: 3,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        children: List.generate(9, (index) {
+          final number = index + 1;
+          return Center(
+            child:
+                cell.memos.contains(number)
+                    ? Text(number.toString(), style: const TextStyle(fontSize: 8, color: Colors.black87))
+                    : const SizedBox(),
+          );
+        }),
+      );
+    }
+
     return const SizedBox();
   }
 

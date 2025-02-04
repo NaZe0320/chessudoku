@@ -1,5 +1,6 @@
 import 'package:chessudoku/providers/game_provider.dart';
 import 'package:chessudoku/services/storage_service.dart';
+import 'package:chessudoku/widgets/board/game_controls.dart';
 import 'package:chessudoku/widgets/board/number_pad.dart';
 import 'package:chessudoku/widgets/board/sudoku_board.dart';
 import 'package:flutter/material.dart';
@@ -92,7 +93,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                       children: [
                         // Timer and stats
                         Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(8),
                           color: Colors.blue.shade900,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -125,12 +126,14 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                               padding: const EdgeInsets.all(16.0),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
-                                spacing: 8.0,
-                                children: const [
+                                spacing: 16.0,
+                                children: [
                                   // Sudoku board
-                                  SudokuBoard(),
+                                  const SudokuBoard(),
+                                  // 메모 모드 토글 버튼
+                                  const GameControls(),
                                   // Number pad
-                                  NumberPad(),
+                                  const NumberPad(),
                                 ],
                               ),
                             ),

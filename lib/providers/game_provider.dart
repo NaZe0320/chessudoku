@@ -22,6 +22,7 @@ class GameProvider extends ChangeNotifier {
   // 앱이 백그라운드로 갔는지 여부
   bool _isBackgrounded = false;
   int _accumulatedSeconds = 0;
+  bool _isMemoMode = false;
 
   GameProvider(this._gameState, this._context, this._storageService) {
     _accumulatedSeconds = _gameState.elapsedSeconds;
@@ -34,6 +35,7 @@ class GameProvider extends ChangeNotifier {
   List<int> get selectedCell => _gameState.selectedCell;
   Board get currentBoard => _gameState.currentBoard;
   bool get isPaused => _pauseTime != null;
+  bool get isMemoMode => _isMemoMode;
 
   // 게임 상태 저장
   Future<void> _saveGameProgress() async {
@@ -177,6 +179,7 @@ class GameProvider extends ChangeNotifier {
   }
 
   // 숫자 입력
+  // 숫자 입력 메서드 수정
   void inputNumber(int number) {
     if (!hasSelectedCell) return;
 
@@ -187,22 +190,34 @@ class GameProvider extends ChangeNotifier {
     // 초기값이나 체스 기물이 있는 셀은 수정 불가
     if (cell.isInitial || cell.piece != null) return;
 
-    // 같은 숫자를 다시 누르면 지우기
-    if (cell.number == number) {
-      clearCell();
-      return;
-    }
+    if (_isMemoMode) {
+      // 메모 모드일 때는 메모 추가/제거
+      final currentMemos = Set<int>.from(cell.memos);
+      if (currentMemos.contains(number)) {
+        currentMemos.remove(number);
+      } else {
+        currentMemos.add(number);
+      }
 
-    final newCell = Cell(type: CellType.filled, number: number);
-    final newBoard = currentBoard.updateCell(row, col, newCell);
-    _updateGameState(_gameState.copyWith(currentBoard: newBoard));
+      final newCell = cell.copyWith(memos: currentMemos);
+      final newBoard = currentBoard.updateCell(row, col, newCell);
+      _updateGameState(_gameState.copyWith(currentBoard: newBoard));
+    } else {
+      // 일반 모드일 때는 숫자 입력
+      if (cell.number == number) {
+        clearCell();
+        return;
+      }
 
-    // 잘못된 입력 표시 초기화
-    _wrongCells.remove('$row,$col');
+      final newCell = Cell(type: CellType.filled, number: number);
+      final newBoard = currentBoard.updateCell(row, col, newCell);
+      _updateGameState(_gameState.copyWith(currentBoard: newBoard));
 
-    // 게임 완료 체크
-    if (_isGameComplete()) {
-      completeGame();
+      _wrongCells.remove('$row,$col');
+
+      if (_isGameComplete()) {
+        completeGame();
+      }
     }
 
     notifyListeners();
@@ -446,5 +461,13 @@ class GameProvider extends ChangeNotifier {
 
     // 모든 검사를 통과하면 게임 완료
     return true;
+  }
+
+  /// ----------------------------------------- 메모 기능 ------------------------------------------
+
+  // 메모 모드 토글
+  void toggleMemoMode() {
+    _isMemoMode = !_isMemoMode;
+    notifyListeners();
   }
 }
