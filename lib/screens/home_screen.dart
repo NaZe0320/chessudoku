@@ -84,14 +84,15 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _isLoading = true);
     try {
       final puzzleData = await _apiService.fetchPuzzle(difficulty);
-
       // Firebase에서 퍼즐을 성공적으로 받아왔을 때만 기회 소모
-      final success = true; //TODO: await _chanceManager.useChance();
+      final success = await _chanceManager.useChance();
       if (success) {
         if (!mounted) return;
         Navigator.of(context).pop(); // 난이도 선택 다이얼로그 닫기
 
         final gameState = convertPuzzleToGameState(puzzleData);
+
+        print("TEST : ${gameState.puzzleId}");
 
         Navigator.push(context, MaterialPageRoute(builder: (context) => GameScreen(gameState: gameState)));
       }
@@ -125,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   // 게임 타이틀
                   Text(
-                    'Chess Sudoku',
+                    'ChesSudoku',
                     style: GoogleFonts.playfairDisplay(
                       fontSize: 48,
                       fontWeight: FontWeight.bold,

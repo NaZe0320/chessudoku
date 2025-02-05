@@ -67,7 +67,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             builder:
                 (context, provider, _) => Scaffold(
                   appBar: AppBar(
-                    title: const Text('Chess Sudoku'),
+                    title: const Text('ChesSudoku'),
                     centerTitle: true,
                     elevation: 0,
                     backgroundColor: Colors.blue.shade900,
@@ -82,6 +82,16 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                       },
                     ),
                     actions: [
+                      // Undo button
+                      Consumer<GameProvider>(
+                        builder:
+                            (context, provider, child) => IconButton(
+                              icon: const Icon(Icons.undo),
+                              onPressed: provider.canUndo ? () => provider.undo() : null,
+                              tooltip: 'Undo',
+                            ),
+                      ),
+                      // Pause/Resume button
                       Consumer<GameProvider>(
                         builder:
                             (context, provider, child) => IconButton(

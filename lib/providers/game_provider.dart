@@ -218,6 +218,7 @@ class GameProvider extends ChangeNotifier {
       }
 
       final newCell = Cell(type: CellType.filled, number: number);
+      _addMove(row, col, cell, newCell);
       final newBoard = currentBoard.updateCell(row, col, newCell);
       _updateGameState(_gameState.copyWith(currentBoard: newBoard));
 
@@ -243,6 +244,7 @@ class GameProvider extends ChangeNotifier {
     if (cell.isInitial || cell.piece != null) return;
 
     final newCell = Cell(type: CellType.empty);
+    _addMove(row, col, cell, newCell);
     final newBoard = currentBoard.updateCell(row, col, newCell);
     _updateGameState(_gameState.copyWith(currentBoard: newBoard));
 
@@ -484,7 +486,9 @@ class GameProvider extends ChangeNotifier {
   void _addMove(int row, int col, Cell previousCell, Cell newCell) {
     final move = Move(row: row, col: col, previousCell: previousCell, newCell: newCell);
 
-    final newHistory = MoveHistory(moves: List.from(_gameState.moveHistory.moves)..add(move));
+    final currentMoves = List<Move>.from(_gameState.moveHistory.moves);
+    currentMoves.add(move);
+    final newHistory = MoveHistory(moves: currentMoves);
 
     _updateGameState(_gameState.copyWith(moveHistory: newHistory));
   }
