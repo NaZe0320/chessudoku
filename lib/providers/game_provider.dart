@@ -224,7 +224,7 @@ class GameProvider extends ChangeNotifier {
       final newBoard = currentBoard.updateCell(row, col, newCell);
       _updateGameState(_gameState.copyWith(currentBoard: newBoard));
 
-      _wrongCells.remove('$row,$col');
+      _wrongCells.clear();
 
       if (_isGameComplete()) {
         completeGame();
@@ -249,6 +249,8 @@ class GameProvider extends ChangeNotifier {
     _addMove(row, col, cell, newCell);
     final newBoard = currentBoard.updateCell(row, col, newCell);
     _updateGameState(_gameState.copyWith(currentBoard: newBoard));
+
+    _wrongCells.clear();
 
     notifyListeners();
   }
@@ -414,37 +416,66 @@ class GameProvider extends ChangeNotifier {
     final cell = currentBoard.getCell(row, col);
     if (cell.piece == null) return false;
 
-    final reachableCells = _getReachableCells(row, col, cell.piece!);
-    final numbers = <int>{};
+    bool hasConflict = false;
 
     // 대각선 방향이 독립적으로 처리되어야 하는 비숍
     if (cell.piece == ChessPiece.bishop) {
       final diagonals = _getBishopDiagonals(row, col);
       for (final diagonal in diagonals) {
-        numbers.clear();
+        final numbers = <int>{};
+        final conflictCells = <List<int>>[];
+
         for (final pos in diagonal) {
-          final cell = currentBoard.getCell(pos[0], pos[1]);
-          if (cell.piece != null) break; // 다른 기물이 있으면 해당 방향은 중단
-          if (cell.number != null) {
-            if (numbers.contains(cell.number)) return true;
-            numbers.add(cell.number!);
+          final checkCell = currentBoard.getCell(pos[0], pos[1]);
+          if (checkCell.piece != null) break; // 다른 기물이 있으면 해당 방향은 중단
+
+          if (checkCell.number != null) {
+            if (numbers.contains(checkCell.number)) {
+              hasConflict = true;
+              // 중복된 숫자를 가진 셀들을 모두 표시
+              for (final conflictPos in conflictCells) {
+                if (currentBoard.getCell(conflictPos[0], conflictPos[1]).number == checkCell.number) {
+                  _wrongCells.add('${conflictPos[0]},${conflictPos[1]}');
+                }
+              }
+              _wrongCells.add('${pos[0]},${pos[1]}');
+            }
+            numbers.add(checkCell.number!);
+            conflictCells.add([pos[0], pos[1]]);
           }
         }
       }
-      return false;
+      if (hasConflict) _wrongCells.add('$row,$col');
+      return hasConflict;
     }
 
     // 나이트와 킹은 도달 가능한 모든 셀의 숫자가 서로 달라야 함
+    final reachableCells = _getReachableCells(row, col, cell.piece!);
+    final numbers = <int>{};
+    final conflictCells = <List<int>>[];
+
     for (final pos in reachableCells) {
-      final cell = currentBoard.getCell(pos[0], pos[1]);
-      if (cell.piece != null) continue; // 다른 기물이 있는 칸은 무시
-      if (cell.number != null) {
-        if (numbers.contains(cell.number)) return true;
-        numbers.add(cell.number!);
+      final checkCell = currentBoard.getCell(pos[0], pos[1]);
+      if (checkCell.piece != null) continue; // 다른 기물이 있는 칸은 무시
+
+      if (checkCell.number != null) {
+        if (numbers.contains(checkCell.number)) {
+          hasConflict = true;
+          // 중복된 숫자를 가진 셀들을 모두 표시
+          for (final conflictPos in conflictCells) {
+            if (currentBoard.getCell(conflictPos[0], conflictPos[1]).number == checkCell.number) {
+              _wrongCells.add('${conflictPos[0]},${conflictPos[1]}');
+            }
+          }
+          _wrongCells.add('${pos[0]},${pos[1]}');
+        }
+        numbers.add(checkCell.number!);
+        conflictCells.add([pos[0], pos[1]]);
       }
     }
 
-    return false;
+    if (hasConflict) _wrongCells.add('$row,$col');
+    return hasConflict;
   }
 
   // 체스 기물이 도달할 수 있는 셀들의 좌표 반환
