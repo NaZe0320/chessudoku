@@ -9,19 +9,21 @@ class SudokuBoard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final maxHeight = screenHeight * 0.6;
     final screenWidth = MediaQuery.of(context).size.width;
-    final boardSize = (maxHeight < screenWidth) ? maxHeight : screenWidth;
+    final maxHeight = screenHeight * 0.6; // 화면 높이의 60%를 최대 높이로 설정
+
+    // 가로/세로 중 작은 값을 보드 크기로 사용
+    final boardSize = [maxHeight, screenWidth - 32].reduce((a, b) => a < b ? a : b);
 
     return Consumer<GameProvider>(
       builder: (context, gameProvider, child) {
         return Center(
           child: SizedBox(
-            height: maxHeight,
+            width: boardSize,
+            height: boardSize,
             child: Center(
               child: SizedBox(
                 width: boardSize,
-                height: boardSize,
                 child: Container(
                   decoration: BoxDecoration(border: Border.all(color: Colors.black, width: 2)),
                   child: GridView.builder(

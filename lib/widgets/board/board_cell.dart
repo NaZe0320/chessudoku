@@ -37,8 +37,8 @@ class BoardCell extends StatelessWidget {
           border: Border(
             top: row % 3 == 0 ? boldBorderSide : borderSide,
             left: col % 3 == 0 ? boldBorderSide : borderSide,
-            right: BorderSide.none,
-            bottom: BorderSide.none,
+            right: col == 8 ? boldBorderSide : BorderSide.none,
+            bottom: row == 8 ? boldBorderSide : BorderSide.none,
           ),
         ),
         child: Center(child: _buildCellContent(isWrong)),
