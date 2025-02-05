@@ -6,87 +6,82 @@ import 'package:chessudoku/models/cell.dart';
 import 'package:chessudoku/models/game_state.dart';
 import 'dart:convert';
 
-ChessPiece _getPieceType(String pieceName) {
-  switch (pieceName.toLowerCase()) {
-    case 'king':
-      return ChessPiece.king;
-    case 'bishop':
-      return ChessPiece.bishop;
-    case 'knight':
-      return ChessPiece.knight;
-    case 'rook':
-      return ChessPiece.rook;
-    default:
-      throw Exception('Unknown piece type: $pieceName');
-  }
-}
-
 GameState convertPuzzleToGameState(Map<String, dynamic> puzzleData) {
   final String puzzleId = puzzleData['id'] ?? DateTime.now().toString();
   final pieces = puzzleData['pieces'] as Map<String, dynamic>;
-  final removedCells =
-      (puzzleData['removedCells'] as List<dynamic>)
-          .map((cell) => MapEntry(cell['row'] as int, cell['col'] as int))
-          .toList();
+  final board = puzzleData['board'];
+  final puzzleBoard = (board['puzzle'] as List<dynamic>).cast<Map<String, dynamic>>();
+  final solutionBoard = (board['solution'] as List<dynamic>).cast<Map<String, dynamic>>();
 
-  // 9x9 보드 초기화
+  // Initialize empty boards
   final initialBoardCells = List.generate(9, (row) => List.generate(9, (col) => Cell(type: CellType.empty)));
+  final solutionBoardCells = List.generate(9, (row) => List.generate(9, (col) => Cell(type: CellType.empty)));
 
-  // solution board 초기화 (모든 셀을 1-9로 채움)
-  final solutionBoardCells = List.generate(
-    9,
-    (row) => List.generate(
-      9,
-      (col) => Cell(
-        type: CellType.filled,
-        number: ((row * 3 + row / 3 + col) % 9 + 1).floor(), // 임시로 1-9 채우기
-        isInitial: false,
-      ),
-    ),
-  );
-
-  // 체스 기물 배치
+  // Place chess pieces first
   pieces.forEach((pieceName, positions) {
-    final pieceType = _getPieceType(pieceName);
-    (positions as List<dynamic>).forEach((pos) {
+    ChessPiece pieceType;
+    switch (pieceName.toLowerCase()) {
+      case 'king':
+        pieceType = ChessPiece.king;
+        break;
+      case 'bishop':
+        pieceType = ChessPiece.bishop;
+        break;
+      case 'knight':
+        pieceType = ChessPiece.knight;
+        break;
+      default:
+        throw Exception('Unknown piece type: $pieceName');
+    }
+
+    for (final pos in positions as List<dynamic>) {
       final row = pos['row'] as int;
       final col = pos['col'] as int;
-
-      initialBoardCells[row][col] = Cell(type: CellType.piece, piece: pieceType, isInitial: true);
-
-      solutionBoardCells[row][col] = Cell(type: CellType.piece, piece: pieceType, isInitial: true);
-    });
+      final cell = Cell(type: CellType.piece, piece: pieceType, isInitial: true);
+      initialBoardCells[row][col] = cell;
+      solutionBoardCells[row][col] = cell;
+    }
   });
 
-  // removedCells를 제외한 나머지 셀들을 initial 타입으로 설정
-  for (int row = 0; row < 9; row++) {
-    for (int col = 0; col < 9; col++) {
-      if (initialBoardCells[row][col].type != CellType.piece) {
-        bool isRemoved = removedCells.any((cell) => cell.key == row && cell.value == col);
+  // Fill puzzle board
+  for (final cell in puzzleBoard) {
+    final row = cell['row'] as int;
+    final col = cell['col'] as int;
+    final type = cell['type'] as String;
+    final value = cell['value'];
 
-        if (!isRemoved) {
-          initialBoardCells[row][col] = Cell(
-            type: CellType.initial,
-            number: solutionBoardCells[row][col].number,
-            isInitial: true,
-          );
-        }
-      }
+    if (type == 'number' && value != null && value != '') {
+      initialBoardCells[row][col] = Cell(
+        type: CellType.initial,
+        number: value is int ? value : int.parse(value.toString()),
+        isInitial: true,
+      );
     }
   }
 
-  final initialBoard = Board(cells: initialBoardCells);
-  final solutionBoard = Board(cells: solutionBoardCells);
+  // Fill solution board
+  for (final cell in solutionBoard) {
+    final row = cell['row'] as int;
+    final col = cell['col'] as int;
+    final type = cell['type'] as String;
+    final value = cell['value'];
+
+    if (type == 'number') {
+      solutionBoardCells[row][col] = Cell(
+        type: CellType.filled,
+        number: value is int ? value : int.parse(value.toString()),
+        isInitial: false,
+      );
+    }
+  }
 
   return GameState(
     puzzleId: puzzleId,
     status: GameStatus.playing,
-    initialBoard: initialBoard,
-    currentBoard: initialBoard,
-    solutionBoard: solutionBoard,
+    initialBoard: Board(cells: initialBoardCells),
+    currentBoard: Board(cells: initialBoardCells),
+    solutionBoard: Board(cells: solutionBoardCells),
     startTime: DateTime.now(),
-    selectedCell: [-1, -1],
-    hintsUsed: 0,
     elapsedSeconds: 0,
   );
 }

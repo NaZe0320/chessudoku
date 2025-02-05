@@ -85,14 +85,12 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final puzzleData = await _apiService.fetchPuzzle(difficulty);
       // Firebase에서 퍼즐을 성공적으로 받아왔을 때만 기회 소모
-      final success = await _chanceManager.useChance();
+      final success = true; //await _chanceManager.useChance();
       if (success) {
         if (!mounted) return;
         Navigator.of(context).pop(); // 난이도 선택 다이얼로그 닫기
 
         final gameState = convertPuzzleToGameState(puzzleData);
-
-        print("TEST : ${gameState.puzzleId}");
 
         Navigator.push(context, MaterialPageRoute(builder: (context) => GameScreen(gameState: gameState)));
       }

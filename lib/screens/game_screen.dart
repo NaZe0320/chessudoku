@@ -28,7 +28,6 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _gameProvider?.dispose(); // null check 추가
     super.dispose();
   }
 
