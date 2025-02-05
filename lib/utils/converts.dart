@@ -30,6 +30,9 @@ GameState convertPuzzleToGameState(Map<String, dynamic> puzzleData) {
       case 'knight':
         pieceType = ChessPiece.knight;
         break;
+      case 'rook':
+        pieceType = ChessPiece.rook;
+        break;
       default:
         throw Exception('Unknown piece type: $pieceName');
     }

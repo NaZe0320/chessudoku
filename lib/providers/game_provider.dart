@@ -447,6 +447,34 @@ class GameProvider extends ChangeNotifier {
       }
       if (hasConflict) _wrongCells.add('$row,$col');
       return hasConflict;
+    } else if (cell.piece == ChessPiece.rook) {
+      final lines = _getRookLines(row, col);
+      for (final line in lines) {
+        final numbers = <int>{};
+        final conflictCells = <List<int>>[];
+
+        for (final pos in line) {
+          final checkCell = currentBoard.getCell(pos[0], pos[1]);
+          if (checkCell.piece != null) break; // 다른 기물이 있으면 해당 방향은 중단
+
+          if (checkCell.number != null) {
+            if (numbers.contains(checkCell.number)) {
+              hasConflict = true;
+              // 중복된 숫자를 가진 셀들을 모두 표시
+              for (final conflictPos in conflictCells) {
+                if (currentBoard.getCell(conflictPos[0], conflictPos[1]).number == checkCell.number) {
+                  _wrongCells.add('${conflictPos[0]},${conflictPos[1]}');
+                }
+              }
+              _wrongCells.add('${pos[0]},${pos[1]}');
+            }
+            numbers.add(checkCell.number!);
+            conflictCells.add([pos[0], pos[1]]);
+          }
+        }
+      }
+      if (hasConflict) _wrongCells.add('$row,$col');
+      return hasConflict;
     }
 
     // 나이트와 킹은 도달 가능한 모든 셀의 숫자가 서로 달라야 함
@@ -554,6 +582,37 @@ class GameProvider extends ChangeNotifier {
     }
 
     return diagonals;
+  }
+
+  // 룩의 4개 직선 방향별 셀 좌표 반환 함수 추가
+  List<List<List<int>>> _getRookLines(int row, int col) {
+    final lines = <List<List<int>>>[];
+
+    // 상, 하, 좌, 우 방향
+    final directions = [
+      [-1, 0], // 상
+      [1, 0], // 하
+      [0, -1], // 좌
+      [0, 1], // 우
+    ];
+
+    for (final dir in directions) {
+      final line = <List<int>>[];
+      var r = row + dir[0];
+      var c = col + dir[1];
+
+      while (_isValidPosition(r, c)) {
+        line.add([r, c]);
+        r += dir[0];
+        c += dir[1];
+      }
+
+      if (line.isNotEmpty) {
+        lines.add(line);
+      }
+    }
+
+    return lines;
   }
 
   // 좌표가 보드 범위 내인지 확인
