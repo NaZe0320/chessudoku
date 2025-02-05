@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:chessudoku/enums/chess_piece.dart';
 import 'package:chessudoku/enums/game_status.dart';
 import 'package:chessudoku/models/move.dart';
 import 'package:chessudoku/models/move_history.dart';
@@ -96,6 +97,7 @@ class GameProvider extends ChangeNotifier {
     }
   }
 
+  // 타이머 시작
   void startTimer() {
     if (_isBackgrounded || isPaused) return; // 백그라운드 상태나 일시정지 상태면 시작하지 않음
 
@@ -248,61 +250,6 @@ class GameProvider extends ChangeNotifier {
     final newBoard = currentBoard.updateCell(row, col, newCell);
     _updateGameState(_gameState.copyWith(currentBoard: newBoard));
 
-    // 입력된 셀과 관련된 모든 셀들의 유효성 다시 검사
-    _validateRelatedCells(row, col);
-
-    notifyListeners();
-  }
-
-  // 현재 입력된 숫자들의 유효성 검사
-  void checkCurrentInput() {
-    _wrongCells.clear();
-    bool hasError = false;
-
-    // 스도쿠 규칙 검사 (행, 열, 3x3 박스)
-    for (var i = 0; i < 9; i++) {
-      for (var j = 0; j < 9; j++) {
-        final cell = currentBoard.getCell(i, j);
-        if (cell.number == null) continue;
-
-        // 행 검사
-        final row = currentBoard.getRow(i);
-        if (_hasDuplicateInList(row, i, j)) {
-          _wrongCells.add('$i,$j');
-          hasError = true;
-        }
-
-        // 열 검사
-        final column = currentBoard.getColumn(j);
-        if (_hasDuplicateInList(column, i, j)) {
-          _wrongCells.add('$i,$j');
-          hasError = true;
-        }
-
-        // 3x3 박스 검사
-        final box = currentBoard.getBox(i, j);
-        if (_hasDuplicateInBox(box, i, j)) {
-          _wrongCells.add('$i,$j');
-          hasError = true;
-        }
-
-        // 체스 규칙 검사
-        if (cell.piece != null) {
-          final movableCells = currentBoard.getPieceMovableCells(i, j);
-          if (_hasConflictWithPieceRule(cell, movableCells, i, j)) {
-            _wrongCells.add('$i,$j');
-            hasError = true;
-          }
-        }
-      }
-    }
-
-    if (!hasError) {
-      ScaffoldMessenger.of(
-        _context,
-      ).showSnackBar(const SnackBar(content: Text('현재까지 입력이 모두 올바릅니다!'), duration: Duration(seconds: 2)));
-    }
-
     notifyListeners();
   }
 
@@ -354,123 +301,252 @@ class GameProvider extends ChangeNotifier {
     _highlightedCells.clear();
   }
 
-  // 리스트 내 중복 숫자 검사
-  bool _hasDuplicateInList(List<Cell> cells, int currentRow, int currentCol) {
-    final currentNumber = currentBoard.getCell(currentRow, currentCol).number;
-    if (currentNumber == null) return false;
+  // ----------------------------------- 유효성 검사 ----------------------------------
 
-    var count = 0;
-    for (var cell in cells) {
-      if (cell.number == currentNumber) count++;
-      if (count > 1) return true;
-    }
-    return false;
-  }
-
-  // 3x3 박스 내 중복 숫자 검사
-  bool _hasDuplicateInBox(List<Cell> boxCells, int currentRow, int currentCol) {
-    final currentNumber = currentBoard.getCell(currentRow, currentCol).number;
-    if (currentNumber == null) return false;
-
-    var count = 0;
-    for (var cell in boxCells) {
-      if (cell.number == currentNumber) count++;
-      if (count > 1) return true;
-    }
-    return false;
-  }
-
-  // 체스 규칙 위반 검사
-  bool _hasConflictWithPieceRule(Cell currentCell, List<Cell> movableCells, int row, int col) {
-    final numbers = <int>{};
-    for (var cell in movableCells) {
-      if (cell.number != null) {
-        if (numbers.contains(cell.number)) {
-          return true; // 이동 가능한 셀들 중에 중복된 숫자가 있음
-        }
-        numbers.add(cell.number!);
-      }
-    }
-    return false;
-  }
-
-  // 입력된 셀과 관련된 모든 셀들의 유효성 검사
-  void _validateRelatedCells(int inputRow, int inputCol) {
-    // 영향을 받는 모든 셀의 wrong 상태 초기화
+  // 현재 입력된 숫자들의 유효성 검사
+  void checkCurrentInput() {
     _wrongCells.clear();
+    bool hasError = false;
 
-    // 같은 행에 있는 모든 셀 검사
-    final row = currentBoard.getRow(inputRow);
-    for (var col = 0; col < 9; col++) {
-      if (_hasDuplicateInList(row, inputRow, col)) {
-        _wrongCells.add('$inputRow,$col');
-      }
-    }
+    // 스도쿠 기본 규칙 검사 (행, 열, 3x3 박스)
+    for (var i = 0; i < 9; i++) {
+      for (var j = 0; j < 9; j++) {
+        final cell = currentBoard.getCell(i, j);
+        if (cell.number == null) continue;
 
-    // 같은 열에 있는 모든 셀 검사
-    final column = currentBoard.getColumn(inputCol);
-    for (var row = 0; row < 9; row++) {
-      if (_hasDuplicateInList(column, row, inputCol)) {
-        _wrongCells.add('$row,$inputCol');
-      }
-    }
+        // 행 검사
+        if (_hasDuplicateInRow(i, j)) {
+          _wrongCells.add('$i,$j');
+          hasError = true;
+        }
 
-    // 같은 3x3 박스에 있는 모든 셀 검사
-    final boxStartRow = (inputRow ~/ 3) * 3;
-    final boxStartCol = (inputCol ~/ 3) * 3;
-    final box = currentBoard.getBox(inputRow, inputCol);
-    for (var r = 0; r < 3; r++) {
-      for (var c = 0; c < 3; c++) {
-        final currentRow = boxStartRow + r;
-        final currentCol = boxStartCol + c;
-        if (_hasDuplicateInBox(box, currentRow, currentCol)) {
-          _wrongCells.add('$currentRow,$currentCol');
+        // 열 검사
+        if (_hasDuplicateInColumn(i, j)) {
+          _wrongCells.add('$i,$j');
+          hasError = true;
+        }
+
+        // 3x3 박스 검사
+        if (_hasDuplicateInBox(i, j)) {
+          _wrongCells.add('$i,$j');
+          hasError = true;
         }
       }
     }
 
-    // 체스 기물이 있는 셀들과 그 이동 범위 검사
-    for (var row = 0; row < 9; row++) {
-      for (var col = 0; col < 9; col++) {
-        final cell = currentBoard.getCell(row, col);
+    // 체스 기물 규칙 검사
+    for (var i = 0; i < 9; i++) {
+      for (var j = 0; j < 9; j++) {
+        final cell = currentBoard.getCell(i, j);
         if (cell.piece != null) {
-          final movableCells = currentBoard.getPieceMovableCells(row, col);
-          if (_hasConflictWithPieceRule(cell, movableCells, row, col)) {
-            _wrongCells.add('$row,$col');
+          if (_hasChessPieceConflict(i, j)) {
+            _wrongCells.add('$i,$j');
+            hasError = true;
           }
         }
       }
     }
+
+    if (!hasError) {
+      ScaffoldMessenger.of(
+        _context,
+      ).showSnackBar(const SnackBar(content: Text('현재까지 입력이 모두 올바릅니다!'), duration: Duration(seconds: 2)));
+    }
+
+    notifyListeners();
   }
 
-  bool _isGameComplete() {
-    // 스도쿠 보드의 모든 셀을 검사
-    for (var i = 0; i < Board.size; i++) {
-      for (var j = 0; j < Board.size; j++) {
-        final cell = currentBoard.getCell(i, j);
+  // 행에서 중복 검사
+  bool _hasDuplicateInRow(int row, int col) {
+    final currentNumber = currentBoard.getCell(row, col).number;
+    if (currentNumber == null) return false;
 
-        // 비어있는 셀이 있으면 완료되지 않은 상태
-        if (cell.type == CellType.empty) {
-          return false;
+    for (var c = 0; c < 9; c++) {
+      if (c != col) {
+        final cell = currentBoard.getCell(row, c);
+        if (cell.number == currentNumber) {
+          return true;
         }
+      }
+    }
+    return false;
+  }
 
-        // 체스 기물이 없고 숫자가 없는 셀이 있으면 완료되지 않은 상태
-        if (cell.piece == null && cell.number == null) {
+  // 열에서 중복 검사
+  bool _hasDuplicateInColumn(int row, int col) {
+    final currentNumber = currentBoard.getCell(row, col).number;
+    if (currentNumber == null) return false;
+
+    for (var r = 0; r < 9; r++) {
+      if (r != row) {
+        final cell = currentBoard.getCell(r, col);
+        if (cell.number == currentNumber) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  // 3x3 박스에서 중복 검사
+  bool _hasDuplicateInBox(int row, int col) {
+    final currentNumber = currentBoard.getCell(row, col).number;
+    if (currentNumber == null) return false;
+
+    final boxStartRow = (row ~/ 3) * 3;
+    final boxStartCol = (col ~/ 3) * 3;
+
+    for (var r = boxStartRow; r < boxStartRow + 3; r++) {
+      for (var c = boxStartCol; c < boxStartCol + 3; c++) {
+        if (r != row || c != col) {
+          final cell = currentBoard.getCell(r, c);
+          if (cell.number == currentNumber) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  // 체스 기물 규칙 검사
+  bool _hasChessPieceConflict(int row, int col) {
+    final cell = currentBoard.getCell(row, col);
+    if (cell.piece == null) return false;
+
+    final reachableCells = _getReachableCells(row, col, cell.piece!);
+    final numbers = <int>{};
+
+    // 대각선 방향이 독립적으로 처리되어야 하는 비숍
+    if (cell.piece == ChessPiece.bishop) {
+      final diagonals = _getBishopDiagonals(row, col);
+      for (final diagonal in diagonals) {
+        numbers.clear();
+        for (final pos in diagonal) {
+          final cell = currentBoard.getCell(pos[0], pos[1]);
+          if (cell.piece != null) break; // 다른 기물이 있으면 해당 방향은 중단
+          if (cell.number != null) {
+            if (numbers.contains(cell.number)) return true;
+            numbers.add(cell.number!);
+          }
+        }
+      }
+      return false;
+    }
+
+    // 나이트와 킹은 도달 가능한 모든 셀의 숫자가 서로 달라야 함
+    for (final pos in reachableCells) {
+      final cell = currentBoard.getCell(pos[0], pos[1]);
+      if (cell.piece != null) continue; // 다른 기물이 있는 칸은 무시
+      if (cell.number != null) {
+        if (numbers.contains(cell.number)) return true;
+        numbers.add(cell.number!);
+      }
+    }
+
+    return false;
+  }
+
+  // 체스 기물이 도달할 수 있는 셀들의 좌표 반환
+  List<List<int>> _getReachableCells(int row, int col, ChessPiece piece) {
+    final cells = <List<int>>[];
+
+    switch (piece) {
+      case ChessPiece.knight:
+        // 나이트의 L자 이동
+        final moves = [
+          [-2, -1],
+          [-2, 1],
+          [-1, -2],
+          [-1, 2],
+          [1, -2],
+          [1, 2],
+          [2, -1],
+          [2, 1],
+        ];
+        for (final move in moves) {
+          final newRow = row + move[0];
+          final newCol = col + move[1];
+          if (_isValidPosition(newRow, newCol)) {
+            cells.add([newRow, newCol]);
+          }
+        }
+        break;
+
+      case ChessPiece.king:
+        // 킹의 8방향 1칸 이동
+        for (var i = -1; i <= 1; i++) {
+          for (var j = -1; j <= 1; j++) {
+            if (i == 0 && j == 0) continue;
+            final newRow = row + i;
+            final newCol = col + j;
+            if (_isValidPosition(newRow, newCol)) {
+              cells.add([newRow, newCol]);
+            }
+          }
+        }
+        break;
+
+      default:
+        break;
+    }
+
+    return cells;
+  }
+
+  // 비숍의 4개 대각선 방향별 셀 좌표 반환
+  List<List<List<int>>> _getBishopDiagonals(int row, int col) {
+    final diagonals = <List<List<int>>>[];
+
+    // 우상, 우하, 좌상, 좌하 방향
+    final directions = [
+      [1, 1],
+      [1, -1],
+      [-1, 1],
+      [-1, -1],
+    ];
+
+    for (final dir in directions) {
+      final diagonal = <List<int>>[];
+      var r = row + dir[0];
+      var c = col + dir[1];
+
+      while (_isValidPosition(r, c)) {
+        diagonal.add([r, c]);
+        r += dir[0];
+        c += dir[1];
+      }
+
+      if (diagonal.isNotEmpty) {
+        diagonals.add(diagonal);
+      }
+    }
+
+    return diagonals;
+  }
+
+  // 좌표가 보드 범위 내인지 확인
+  bool _isValidPosition(int row, int col) {
+    return row >= 0 && row < 9 && col >= 0 && col < 9;
+  }
+
+  // 게임 완료 여부 확인
+  bool _isGameComplete() {
+    // 모든 셀이 채워져 있는지 확인
+    for (var i = 0; i < 9; i++) {
+      for (var j = 0; j < 9; j++) {
+        final cell = currentBoard.getCell(i, j);
+        if (cell.piece == null && (cell.type == CellType.empty || cell.number == null)) {
           return false;
         }
       }
     }
 
-    // 현재 입력된 숫자들의 유효성 검사
+    // 현재 입력의 유효성 검사
     checkCurrentInput();
 
-    // 잘못된 입력(wrongCells)이 있으면 완료되지 않은 상태
-    if (_wrongCells.isNotEmpty) {
-      return false;
-    }
-
-    // 모든 검사를 통과하면 게임 완료
-    return true;
+    // 잘못된 입력이 있으면 완료되지 않은 상태
+    return _wrongCells.isEmpty;
   }
 
   /// ----------------------------------------- 메모 기능 ------------------------------------------
@@ -504,9 +580,6 @@ class GameProvider extends ChangeNotifier {
     final newHistory = MoveHistory(moves: List.from(currentHistory.moves));
 
     _updateGameState(_gameState.copyWith(currentBoard: newBoard, moveHistory: newHistory));
-
-    // 입력된 셀과 관련된 모든 셀들의 유효성 다시 검사
-    _validateRelatedCells(lastMove.row, lastMove.col);
 
     notifyListeners();
   }
