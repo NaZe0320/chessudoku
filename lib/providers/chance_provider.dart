@@ -1,60 +1,105 @@
-import 'package:chessudoku/models/chance_manager.dart';
-import 'package:flutter/foundation.dart';
 import 'dart:async';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:chessudoku/models/chance.dart';
+import 'package:chessudoku/services/chance_service.dart';
+import 'package:flutter/material.dart';
 
 class ChanceProvider extends ChangeNotifier {
-  late final ChanceManager _chanceManager;
-  int _currentChances = 5;
-  Duration? _nextRecharge;
+  final ChanceService _chanceService;
+  final String _userId;
+
+  Chance? _chance;
+  Timer? _timer;
   bool _isInitialized = false;
+  Duration? _remainingTime;
 
-  int get currentChances => _currentChances;
-  Duration? get nextRecharge => _nextRecharge;
-  bool get isInitialized => _isInitialized;
-
-  ChanceProvider() {
+  ChanceProvider(this._userId, this._chanceService) {
     _initialize();
   }
 
+  bool get isInitialized => _isInitialized;
+  int get currentChances => _chance?.currentChances ?? 0;
+  Duration? get nextRecharge => _remainingTime;
+
   Future<void> _initialize() async {
-    final prefs = await SharedPreferences.getInstance();
-    _chanceManager = ChanceManager(prefs, updateCallback: _handleChanceUpdate);
-    _currentChances = _chanceManager.currentChances;
-    _nextRecharge = _chanceManager.timeUntilNextRecharge;
+    // 초기 데이터 로드
+    _chance = await _chanceService.getChance(_userId);
+    _updateRemainingTime();
     _isInitialized = true;
     notifyListeners();
+
+    // 실시간 업데이트 구독
+    _chanceService.chanceStream(_userId).listen((chance) {
+      _chance = chance;
+      _updateRemainingTime();
+      notifyListeners();
+    });
+
+    // 타이머 시작
+    _startTimer();
   }
 
-  void _handleChanceUpdate(int chances, Duration? nextRecharge) {
-    _currentChances = chances;
-    _nextRecharge = nextRecharge;
-    notifyListeners();
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _updateRemainingTime();
+      if (_remainingTime != null) {
+        notifyListeners();
+      } else {
+        _checkAndRechargeChances();
+      }
+    });
+  }
+
+  void _updateRemainingTime() {
+    if (_chance == null) return;
+
+    final nextRecharge = _chance!.lastUpdateTime.add(Chance.rechargeInterval);
+    final now = DateTime.now();
+
+    if (now.isAfter(nextRecharge)) {
+      _remainingTime = null;
+    } else {
+      _remainingTime = nextRecharge.difference(now);
+    }
+  }
+
+  Future<void> _checkAndRechargeChances() async {
+    if (_userId.isEmpty) return;
+
+    final updatedChance = await _chanceService.checkAndRechargeChances(_userId);
+    if (updatedChance != null) {
+      _chance = updatedChance;
+      _updateRemainingTime();
+      notifyListeners();
+    }
   }
 
   Future<bool> useChance() async {
-    final result = await _chanceManager.useChance();
-    if (result) {
-      _currentChances = _chanceManager.currentChances;
-      _nextRecharge = _chanceManager.timeUntilNextRecharge;
+    if (_userId.isEmpty) return false;
+    final success = await _chanceService.useChance(_userId);
+    if (success) {
+      _chance = await _chanceService.getChance(_userId);
+      _updateRemainingTime();
       notifyListeners();
     }
-    return result;
+    return success;
   }
 
   Future<bool> addChance() async {
-    final result = await _chanceManager.addChance();
-    if (result) {
-      _currentChances = _chanceManager.currentChances;
-      _nextRecharge = _chanceManager.timeUntilNextRecharge;
+    if (_userId.isEmpty) return false;
+    final success = await _chanceService.addChance(_userId);
+    if (success) {
+      _chance = await _chanceService.getChance(_userId);
+      _updateRemainingTime();
       notifyListeners();
     }
-    return result;
+    return success;
   }
 
   @override
   void dispose() {
-    _chanceManager.dispose();
+    _timer?.cancel();
     super.dispose();
   }
 }

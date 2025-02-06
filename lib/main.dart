@@ -1,8 +1,10 @@
 import 'package:chessudoku/firebase_options.dart';
 import 'package:chessudoku/providers/authentication_provider.dart';
+import 'package:chessudoku/providers/chance_provider.dart';
 import 'package:chessudoku/screens/home_screen.dart';
 import 'package:chessudoku/screens/login_screen.dart';
 import 'package:chessudoku/services/authentication_service.dart';
+import 'package:chessudoku/services/chance_service.dart';
 import 'package:chessudoku/services/storage_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +29,13 @@ void main() async {
   final storageService = await StorageService.initialize();
   runApp(
     MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => AuthProvider(AuthService()))],
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider(AuthService())),
+        ChangeNotifierProxyProvider<AuthProvider, ChanceProvider>(
+          create: (context) => ChanceProvider('', ChanceService()),
+          update: (context, auth, previous) => ChanceProvider(auth.user?.uid ?? '', ChanceService()),
+        ),
+      ],
       child: ChessSudokuApp(storageService: storageService),
     ),
   );
