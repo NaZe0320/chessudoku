@@ -11,9 +11,9 @@ Future<bool?> showResetConfirmationDialog(BuildContext context) {
         ),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('CANCEL')),
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
             child: const Text('RESET'),
           ),
         ],
