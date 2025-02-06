@@ -78,7 +78,7 @@ class BoardCell extends StatelessWidget {
           return Center(
             child:
                 cell.memos.contains(number)
-                    ? Text(number.toString(), style: const TextStyle(fontSize: 8, color: Colors.black87))
+                    ? Text(number.toString(), style: const TextStyle(fontSize: 10, color: Colors.black87))
                     : const SizedBox(),
           );
         }),

@@ -1,11 +1,13 @@
 import 'package:chessudoku/enums/cell_type.dart';
+import 'package:chessudoku/enums/chess_piece.dart';
+import 'package:chessudoku/enums/game_status.dart';
+import 'package:chessudoku/models/board.dart';
 import 'package:chessudoku/models/move_history.dart';
 import 'package:equatable/equatable.dart';
-import 'package:chessudoku/models/board.dart';
-import 'package:chessudoku/enums/game_status.dart';
 
 class GameState extends Equatable {
   final String puzzleId;
+  final String difficulty; // 난이도 추가
   final GameStatus status;
   final Board initialBoard;
   final Board currentBoard;
@@ -18,6 +20,7 @@ class GameState extends Equatable {
 
   const GameState({
     required this.puzzleId,
+    required this.difficulty, // 난이도 필수 파라미터로 추가
     required this.status,
     required this.initialBoard,
     required this.currentBoard,
@@ -42,6 +45,7 @@ class GameState extends Equatable {
   Map<String, dynamic> toJson() {
     return {
       'puzzleId': puzzleId,
+      'difficulty': difficulty, // JSON 직렬화에 난이도 추가
       'status': status.toString(),
       'initialBoard': initialBoard.toJson(),
       'currentBoard': currentBoard.toJson(),
@@ -57,6 +61,7 @@ class GameState extends Equatable {
   factory GameState.fromJson(Map<String, dynamic> json) {
     return GameState(
       puzzleId: json['puzzleId'],
+      difficulty: json['difficulty'], // JSON 역직렬화에 난이도 추가
       status: GameStatus.values.firstWhere((e) => e.toString() == json['status']),
       initialBoard: Board.fromJson(json['initialBoard']),
       currentBoard: Board.fromJson(json['currentBoard']),
@@ -71,6 +76,7 @@ class GameState extends Equatable {
 
   GameState copyWith({
     String? puzzleId,
+    String? difficulty, // copyWith에 난이도 추가
     GameStatus? status,
     Board? initialBoard,
     Board? currentBoard,
@@ -83,6 +89,7 @@ class GameState extends Equatable {
   }) {
     return GameState(
       puzzleId: puzzleId ?? this.puzzleId,
+      difficulty: difficulty ?? this.difficulty,
       status: status ?? this.status,
       initialBoard: initialBoard ?? this.initialBoard,
       currentBoard: currentBoard ?? this.currentBoard,
@@ -98,6 +105,7 @@ class GameState extends Equatable {
   @override
   List<Object?> get props => [
     puzzleId,
+    difficulty,
     status,
     initialBoard,
     currentBoard,

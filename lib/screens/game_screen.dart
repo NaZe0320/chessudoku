@@ -66,7 +66,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             builder:
                 (context, provider, _) => Scaffold(
                   appBar: AppBar(
-                    title: const Text('ChesSudoku'),
+                    title: Text(provider.gameState.difficulty.toUpperCase()),
                     centerTitle: true,
                     elevation: 0,
                     backgroundColor: Colors.blue.shade900,
@@ -90,20 +90,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                               tooltip: 'Undo',
                             ),
                       ),
+
                       // Pause/Resume button
-                      Consumer<GameProvider>(
-                        builder:
-                            (context, provider, child) => IconButton(
-                              icon: Icon(provider.isPaused ? Icons.play_arrow : Icons.pause),
-                              onPressed: () {
-                                if (provider.isPaused) {
-                                  provider.resumeTimer();
-                                } else {
-                                  provider.pauseTimer();
-                                }
-                              },
-                            ),
-                      ),
                     ],
                   ),
                   body: SafeArea(
@@ -114,7 +102,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                           padding: const EdgeInsets.all(8),
                           color: Colors.blue.shade900,
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               // Timer
                               Consumer<GameProvider>(
@@ -132,6 +120,19 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                                           ),
                                         ),
                                       ],
+                                    ),
+                              ),
+                              Consumer<GameProvider>(
+                                builder:
+                                    (context, provider, child) => IconButton(
+                                      icon: Icon(provider.isPaused ? Icons.play_arrow : Icons.pause),
+                                      onPressed: () {
+                                        if (provider.isPaused) {
+                                          provider.resumeTimer();
+                                        } else {
+                                          provider.pauseTimer();
+                                        }
+                                      },
                                     ),
                               ),
                             ],

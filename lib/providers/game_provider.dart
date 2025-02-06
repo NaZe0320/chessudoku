@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:chessudoku/enums/chess_piece.dart';
 import 'package:chessudoku/enums/game_status.dart';
+import 'package:chessudoku/models/game_record.dart';
 import 'package:chessudoku/models/move.dart';
 import 'package:chessudoku/models/move_history.dart';
+import 'package:chessudoku/screens/completion_dialog.dart';
 import 'package:chessudoku/services/storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:chessudoku/models/game_state.dart';
@@ -112,6 +114,24 @@ class GameProvider extends ChangeNotifier {
     });
   }
 
+  // 게임 완료 시 기록 저장
+  Future<void> _saveGameRecord() async {
+    final record = GameRecord(
+      difficulty: _gameState.difficulty, // puzzleId format: "difficulty_number"
+      elapsedSeconds: _gameState.elapsedSeconds,
+      completedAt: DateTime.now(),
+      hintsUsed: _gameState.hintsUsed,
+      puzzleId: _gameState.puzzleId,
+    );
+
+    try {
+      await _storageService.saveGameRecord(record);
+      print("Saving Game Record Success");
+    } catch (e) {
+      print('Error saving game record: $e');
+    }
+  }
+
   // 게임 종료
   void completeGame() async {
     _timer?.cancel();
@@ -123,14 +143,29 @@ class GameProvider extends ChangeNotifier {
       ),
     );
 
+    // 게임 기록 저장
+    await _saveGameRecord();
+
     // 게임 완료 시 저장된 게임 상태 삭제
     await _storageService.clearGameProgress();
 
-    // 완료 메시지 표시
     if (_context.mounted) {
-      ScaffoldMessenger.of(_context).showSnackBar(
-        const SnackBar(content: Text('Congratulations! You completed the puzzle!'), duration: Duration(seconds: 3)),
+      // 완료 다이얼로그 표시
+      await showDialog(
+        context: _context,
+        barrierDismissible: false,
+        builder:
+            (context) => CompletionDialog(
+              elapsedSeconds: _gameState.elapsedSeconds,
+              hintsUsed: _gameState.hintsUsed,
+              difficulty: _gameState.difficulty,
+            ),
       );
+
+      // 다이얼로그가 닫히면 게임 화면을 닫고 홈으로 돌아가기
+      if (_context.mounted) {
+        Navigator.of(_context).pop(); // 게임 화면 닫기
+      }
     }
   }
 
@@ -352,7 +387,7 @@ class GameProvider extends ChangeNotifier {
     if (!hasError) {
       ScaffoldMessenger.of(
         _context,
-      ).showSnackBar(const SnackBar(content: Text('현재까지 입력이 모두 올바릅니다!'), duration: Duration(seconds: 2)));
+      ).showSnackBar(const SnackBar(content: Text('All inputs are correct!'), duration: Duration(seconds: 2)));
     }
 
     notifyListeners();

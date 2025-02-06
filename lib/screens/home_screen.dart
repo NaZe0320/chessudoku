@@ -1,5 +1,6 @@
 import 'package:chessudoku/models/chance_manager.dart';
 import 'package:chessudoku/screens/game_screen.dart';
+import 'package:chessudoku/screens/record_screen.dart';
 import 'package:chessudoku/screens/watch_ad_dialog.dart';
 import 'package:chessudoku/services/api_service.dart';
 import 'package:chessudoku/utils/converts.dart';
@@ -15,7 +16,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   late ChanceManager _chanceManager;
   late ApiService _apiService;
   int _currentChances = 5;
@@ -67,6 +68,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+        break;
+      case AppLifecycleState.resumed:
+        _checkSavedGame();
+        break;
+      default:
+        break;
+    }
+  }
+
+  @override
   void dispose() {
     _chanceManager.dispose();
     super.dispose();
@@ -96,7 +111,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } catch (e) {
       if (mounted) {
-        print("ERROR : $e");
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load puzzle: ${e.toString()}')));
       }
     } finally {
@@ -216,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: Icons.emoji_events,
                     label: 'Records',
                     onPressed: () {
-                      // TODO: Navigate to records screen
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const RecordScreen()));
                     },
                   ),
 
@@ -234,14 +248,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 16),
 
                   // 설정 버튼
-                  _MenuButton(
-                    icon: Icons.settings,
-                    label: 'Settings',
-                    onPressed: () {
-                      // TODO: Navigate to settings screen
-                    },
-                  ),
-
+                  // _MenuButton(
+                  //   icon: Icons.settings,
+                  //   label: 'Settings',
+                  //   onPressed: () {
+                  //     // TODO: Navigate to settings screen
+                  //   },
+                  // ),
                   const SizedBox(height: 48),
 
                   // 체스 기물 아이콘들

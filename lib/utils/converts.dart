@@ -8,6 +8,7 @@ import 'dart:convert';
 
 GameState convertPuzzleToGameState(Map<String, dynamic> puzzleData) {
   final String puzzleId = puzzleData['id'] ?? DateTime.now().toString();
+  final String difficulty = puzzleData['difficulty'] ?? 'medium'; // 난이도 추출
   final pieces = puzzleData['pieces'] as Map<String, dynamic>;
   final board = puzzleData['board'];
   final puzzleBoard = (board['puzzle'] as List<dynamic>).cast<Map<String, dynamic>>();
@@ -80,6 +81,7 @@ GameState convertPuzzleToGameState(Map<String, dynamic> puzzleData) {
 
   return GameState(
     puzzleId: puzzleId,
+    difficulty: difficulty, // 난이도 추가
     status: GameStatus.playing,
     initialBoard: Board(cells: initialBoardCells),
     currentBoard: Board(cells: initialBoardCells),
