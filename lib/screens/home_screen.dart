@@ -27,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _apiService = ApiService();
     _checkSavedGame();
     _initializeChanceManager();
@@ -83,6 +84,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _chanceManager.dispose();
     super.dispose();
   }
@@ -135,7 +137,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
         final gameState = convertPuzzleToGameState(puzzleData);
 
-        Navigator.push(context, MaterialPageRoute(builder: (context) => GameScreen(gameState: gameState)));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => GameScreen(gameState: gameState)),
+        ).then((_) => _checkSavedGame());
       }
     } catch (e) {
       if (mounted) {
@@ -244,7 +249,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(builder: (context) => GameScreen(gameState: savedGameState)),
-                                  );
+                                  ).then((_) => _checkSavedGame());
                                 }
                               }
                             }
@@ -258,7 +263,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     icon: Icons.emoji_events,
                     label: 'Records',
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const RecordScreen()));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const RecordScreen()),
+                      ).then((_) => _checkSavedGame());
                     },
                   ),
 
