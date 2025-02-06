@@ -57,8 +57,9 @@ class _WatchAdDialogState extends State<WatchAdDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text('Would you like to watch a video ad to get an extra chance?', textAlign: TextAlign.center),
-          const SizedBox(height: 16),
+
           if (_remainingTime != null && _remainingTime! > Duration.zero) ...[
+            const SizedBox(height: 16),
             const Divider(),
             const SizedBox(height: 8),
             Row(
