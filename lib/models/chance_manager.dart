@@ -1,113 +1,159 @@
 import 'dart:async';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ChanceManager {
-  static const String _chancesKey = 'pawn_chances';
-  static const String _lastUpdateKey = 'last_chance_update';
-  static const int maxChances = 5;
-  static const Duration rechargeDuration = Duration(hours: 3);
+  static const int MAX_CHANCES = 5;
+  static const Duration RECHARGE_INTERVAL = Duration(hours: 2);
 
   final SharedPreferences _prefs;
   Timer? _timer;
-  Function(int chances, Duration? nextRecharge)? _onUpdate;
+  final Function(int chances, Duration? nextRecharge)? _updateCallback;
 
-  ChanceManager(this._prefs) {
-    _initializeChances();
+  // Keys for SharedPreferences
+  static const String _chancesKey = 'game_chances';
+  static const String _lastUpdateKey = 'last_chance_update';
+  static const String _validationKey = 'chance_validation';
+  static const String _deviceIdKey = 'device_id';
+
+  ChanceManager(this._prefs, {Function(int chances, Duration? nextRecharge)? updateCallback})
+    : _updateCallback = updateCallback {
+    _initializeDevice();
     _startTimer();
   }
 
-  Future<bool> addChance() async {
-    await _processElapsedTime();
-    final currentChances = _prefs.getInt(_chancesKey) ?? 0;
+  // 디바이스 ID 초기화 (앱 설치시 한번만 생성)
+  Future<void> _initializeDevice() async {
+    if (!_prefs.containsKey(_deviceIdKey)) {
+      final deviceId = DateTime.now().toIso8601String() + DateTime.now().millisecondsSinceEpoch.toString();
+      await _prefs.setString(_deviceIdKey, deviceId);
 
-    if (currentChances < maxChances) {
-      await _prefs.setInt(_chancesKey, currentChances + 1);
-      _updateCallback();
-      return true;
+      // 최초 설치시 기회 초기화
+      await _initializeChances();
     }
-    return false;
+    _validateChances();
   }
 
-  Future<bool> useChance() async {
-    await _processElapsedTime();
-    final currentChances = _prefs.getInt(_chancesKey) ?? 0;
-
-    if (currentChances > 0) {
-      await _prefs.setInt(_chancesKey, currentChances - 1);
-      _updateCallback();
-      return true;
-    }
-    return false;
-  }
-
-  void setUpdateCallback(Function(int chances, Duration? nextRecharge) callback) {
-    _onUpdate = callback;
-    _updateCallback();
-  }
-
+  // 기회 데이터 초기화
   Future<void> _initializeChances() async {
-    if (!_prefs.containsKey(_chancesKey)) {
-      await _prefs.setInt(_chancesKey, maxChances);
-      await _prefs.setInt(_lastUpdateKey, DateTime.now().millisecondsSinceEpoch);
-    }
-    _processElapsedTime();
+    await _prefs.setInt(_chancesKey, MAX_CHANCES);
+    await _prefs.setString(_lastUpdateKey, DateTime.now().toIso8601String());
+    await _updateValidation();
   }
 
-  Future<void> _processElapsedTime() async {
-    final lastUpdate = DateTime.fromMillisecondsSinceEpoch(
-      _prefs.getInt(_lastUpdateKey) ?? DateTime.now().millisecondsSinceEpoch,
-    );
+  // 검증 해시 업데이트
+  Future<void> _updateValidation() async {
+    final deviceId = _prefs.getString(_deviceIdKey) ?? '';
+    final chances = _prefs.getInt(_chancesKey)?.toString() ?? '';
+    final lastUpdate = _prefs.getString(_lastUpdateKey) ?? '';
+
+    final validationString = '$deviceId:$chances:$lastUpdate';
+    final bytes = utf8.encode(validationString);
+    final hash = sha256.convert(bytes).toString();
+
+    await _prefs.setString(_validationKey, hash);
+  }
+
+  // 데이터 유효성 검증
+  bool _validateChances() {
+    final deviceId = _prefs.getString(_deviceIdKey) ?? '';
+    final chances = _prefs.getInt(_chancesKey)?.toString() ?? '';
+    final lastUpdate = _prefs.getString(_lastUpdateKey) ?? '';
+    final storedHash = _prefs.getString(_validationKey) ?? '';
+
+    final validationString = '$deviceId:$chances:$lastUpdate';
+    final bytes = utf8.encode(validationString);
+    final hash = sha256.convert(bytes).toString();
+
+    if (hash != storedHash) {
+      // 데이터가 조작되었다면 초기화
+      _initializeChances();
+      return false;
+    }
+    return true;
+  }
+
+  // 현재 남은 기회 조회
+  int get currentChances {
+    _validateChances();
+    return _prefs.getInt(_chancesKey) ?? 0;
+  }
+
+  // 다음 충전 시간까지 남은 시간
+  Duration? get timeUntilNextRecharge {
+    final lastUpdateStr = _prefs.getString(_lastUpdateKey);
+    if (lastUpdateStr == null) return null;
+
+    final lastUpdate = DateTime.parse(lastUpdateStr);
+    final nextRecharge = lastUpdate.add(RECHARGE_INTERVAL);
     final now = DateTime.now();
-    final difference = now.difference(lastUpdate);
 
-    if (difference.inSeconds > 0) {
-      final currentChances = _prefs.getInt(_chancesKey) ?? maxChances;
-      final earnedChances = difference.inHours ~/ 3;
-
-      if (earnedChances > 0) {
-        final newChances = (currentChances + earnedChances).clamp(0, maxChances);
-        await _prefs.setInt(_chancesKey, newChances);
-
-        // Update last update time, accounting for unused time
-        final usedTime = Duration(hours: earnedChances * 3);
-        final newLastUpdate = lastUpdate.add(usedTime);
-        await _prefs.setInt(_lastUpdateKey, newLastUpdate.millisecondsSinceEpoch);
-      }
-    }
-    _updateCallback();
+    if (now.isAfter(nextRecharge)) return null;
+    return nextRecharge.difference(now);
   }
 
+  // 기회 사용
+  Future<bool> useChance() async {
+    if (!_validateChances()) return false;
+
+    final currentChances = _prefs.getInt(_chancesKey) ?? 0;
+    if (currentChances <= 0) return false;
+
+    await _prefs.setInt(_chancesKey, currentChances - 1);
+    await _updateValidation();
+
+    _updateCallback?.call(currentChances - 1, timeUntilNextRecharge);
+    return true;
+  }
+
+  // 기회 추가 (광고 시청 등의 보상)
+  Future<bool> addChance() async {
+    if (!_validateChances()) return false;
+
+    final currentChances = _prefs.getInt(_chancesKey) ?? 0;
+    if (currentChances >= MAX_CHANCES) return false;
+
+    await _prefs.setInt(_chancesKey, currentChances + 1);
+    await _updateValidation();
+
+    _updateCallback?.call(currentChances + 1, timeUntilNextRecharge);
+    return true;
+  }
+
+  // 자동 충전 타이머 시작
   void _startTimer() {
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      _updateCallback();
+    _timer = Timer.periodic(const Duration(minutes: 1), (_) {
+      _checkAndRechargeChances();
     });
   }
 
-  void _updateCallback() {
-    if (_onUpdate != null) {
-      final chances = _prefs.getInt(_chancesKey) ?? maxChances;
-      final lastUpdate = DateTime.fromMillisecondsSinceEpoch(
-        _prefs.getInt(_lastUpdateKey) ?? DateTime.now().millisecondsSinceEpoch,
-      );
+  // 기회 자동 충전 체크
+  Future<void> _checkAndRechargeChances() async {
+    if (!_validateChances()) return;
 
-      if (chances < maxChances) {
-        final nextRecharge = rechargeDuration - DateTime.now().difference(lastUpdate);
-        _onUpdate!(chances, nextRecharge.isNegative ? Duration.zero : nextRecharge);
-      } else {
-        _onUpdate!(chances, null);
+    final lastUpdateStr = _prefs.getString(_lastUpdateKey);
+    if (lastUpdateStr == null) return;
+
+    final lastUpdate = DateTime.parse(lastUpdateStr);
+    final now = DateTime.now();
+    final difference = now.difference(lastUpdate);
+
+    if (difference >= RECHARGE_INTERVAL) {
+      final currentChances = _prefs.getInt(_chancesKey) ?? 0;
+      if (currentChances < MAX_CHANCES) {
+        final newChances = currentChances + 1;
+        await _prefs.setInt(_chancesKey, newChances);
+        await _prefs.setString(_lastUpdateKey, now.toIso8601String());
+        await _updateValidation();
+
+        _updateCallback?.call(newChances, timeUntilNextRecharge);
       }
     }
   }
 
   void dispose() {
     _timer?.cancel();
-    _timer = null;
-  }
-
-  Future<void> reset() async {
-    await _prefs.setInt(_chancesKey, maxChances);
-    await _prefs.setInt(_lastUpdateKey, DateTime.now().millisecondsSinceEpoch);
-    _updateCallback();
   }
 }

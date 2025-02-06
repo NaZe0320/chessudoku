@@ -38,9 +38,10 @@ dependencies:
 
   # 분석/로깅
   logger: ^2.5.0           # 로깅
-  sentry_flutter: ^8.12.0  # 에러 추적 (선택적)
+  sentry_flutter: ^7.10.0  # 에러 추적 (선택적)
 
   cupertino_icons: ^1.0.8
+  crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:
