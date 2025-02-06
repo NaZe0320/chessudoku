@@ -1,10 +1,14 @@
 import 'package:chessudoku/firebase_options.dart';
+import 'package:chessudoku/providers/authentication_provider.dart';
 import 'package:chessudoku/screens/home_screen.dart';
+import 'package:chessudoku/screens/login_screen.dart';
+import 'package:chessudoku/services/authentication_service.dart';
 import 'package:chessudoku/services/storage_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,8 +25,12 @@ void main() async {
 
   // StorageService 초기화
   final storageService = await StorageService.initialize();
-
-  runApp(ChessSudokuApp(storageService: storageService));
+  runApp(
+    MultiProvider(
+      providers: [ChangeNotifierProvider(create: (_) => AuthProvider(AuthService()))],
+      child: ChessSudokuApp(storageService: storageService),
+    ),
+  );
 }
 
 class ChessSudokuApp extends StatelessWidget {
@@ -84,7 +92,14 @@ class ChessSudokuApp extends StatelessWidget {
       // 시스템 설정에 따라 라이트/다크 모드 자동 전환
       themeMode: ThemeMode.system,
 
-      home: const HomeScreen(),
+      home: Consumer<AuthProvider>(
+        builder: (context, authProvider, _) {
+          if (authProvider.isAuthenticated) {
+            return const HomeScreen();
+          }
+          return const LoginScreen();
+        },
+      ),
     );
   }
 }
