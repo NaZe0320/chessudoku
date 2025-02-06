@@ -5,8 +5,8 @@ import 'package:chessudoku/enums/game_status.dart';
 import 'package:chessudoku/models/game_record.dart';
 import 'package:chessudoku/models/move.dart';
 import 'package:chessudoku/models/move_history.dart';
-import 'package:chessudoku/screens/completion_dialog.dart';
 import 'package:chessudoku/services/storage_service.dart';
+import 'package:chessudoku/widgets/dialogs/completion_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:chessudoku/models/game_state.dart';
 import 'package:chessudoku/models/cell.dart';
@@ -706,6 +706,20 @@ class GameProvider extends ChangeNotifier {
 
     _updateGameState(_gameState.copyWith(currentBoard: newBoard, moveHistory: newHistory));
 
+    notifyListeners();
+  }
+
+  //보드 초기화
+  void resetBoard() {
+    _wrongCells.clear();
+    _highlightedCells.clear();
+    _updateGameState(
+      _gameState.copyWith(
+        currentBoard: _gameState.initialBoard,
+        selectedCell: [-1, -1],
+        moveHistory: const MoveHistory(),
+      ),
+    );
     notifyListeners();
   }
 }
