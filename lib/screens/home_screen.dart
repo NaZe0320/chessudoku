@@ -88,6 +88,34 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _startNewGame(BuildContext context) async {
+    if (_hasSavedGame) {
+      // Show warning dialog
+      final shouldContinue = await showDialog<bool>(
+        context: context,
+        builder:
+            (context) => AlertDialog(
+              title: const Text('Warning'),
+              content: const Text(
+                'Starting a new game will delete your saved progress. Are you sure you want to continue?',
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                  child: const Text('Continue'),
+                ),
+              ],
+            ),
+      );
+
+      if (shouldContinue != true) return;
+
+      // Clear saved game if user confirms
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('game_progress');
+    }
+
     if (_currentChances > 0) {
       _showDifficultyDialog(context);
     } else {
