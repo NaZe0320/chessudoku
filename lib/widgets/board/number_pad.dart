@@ -9,11 +9,14 @@ class NumberPad extends StatelessWidget {
   Widget build(BuildContext context) {
     final gameProvider = context.watch<GameProvider>();
 
-    return Container(
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 8,
-        runSpacing: 8,
+    return SizedBox(
+      width: 300, // 전체 너비 지정
+      child: GridView.count(
+        crossAxisCount: 5, // 한 줄에 5개
+        shrinkWrap: true,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        physics: const NeverScrollableScrollPhysics(), // 스크롤 비활성화
         children: [
           ...List.generate(9, (index) {
             final number = index + 1;
