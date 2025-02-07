@@ -5,8 +5,10 @@ import 'package:chessudoku/enums/game_status.dart';
 import 'package:chessudoku/models/game_record.dart';
 import 'package:chessudoku/models/move.dart';
 import 'package:chessudoku/models/move_history.dart';
+import 'package:chessudoku/providers/ad_provider.dart';
 import 'package:chessudoku/providers/authentication_provider.dart';
 import 'package:chessudoku/services/storage_service.dart';
+import 'package:chessudoku/widgets/dialogs/check_recharge_dialog.dart';
 import 'package:chessudoku/widgets/dialogs/completion_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:chessudoku/models/game_state.dart';
@@ -45,6 +47,8 @@ class GameProvider extends ChangeNotifier {
   bool get isPaused => _pauseTime != null;
   bool get isMemoMode => _isMemoMode;
   bool get canUndo => _gameState.canUndo;
+  bool get canCheck => _gameState.remainingChecks > 0;
+  int get remainingChecks => _gameState.remainingChecks;
 
   // 게임 상태 저장
   Future<void> saveGameProgress() async {
@@ -353,14 +357,60 @@ class GameProvider extends ChangeNotifier {
 
   // ----------------------------------- 유효성 검사 ----------------------------------
 
-  // 힌트 사용
-  void useHint() {
-    _updateGameState(_gameState.copyWith(hintsUsed: _gameState.hintsUsed + 1));
-    checkCurrentInput();
-  }
-
   // 현재 입력된 숫자들의 유효성 검사
   void checkCurrentInput() {
+    if (!canCheck) {
+      _showCheckRechargeDialog();
+      return;
+    }
+
+    _wrongCells.clear();
+
+    _updateGameState(_gameState.copyWith(hintsUsed: _gameState.hintsUsed + 1));
+
+    _updateGameState(_gameState.copyWith(remainingChecks: _gameState.remainingChecks - 1));
+
+    final isValid = _validateBoardAndMarkCells();
+
+    if (!isValid) {
+      ScaffoldMessenger.of(
+        _context,
+      ).showSnackBar(const SnackBar(content: Text('All inputs are correct!'), duration: Duration(seconds: 2)));
+    }
+
+    notifyListeners();
+  }
+
+  // 체크 기능 충전을 위한 광고 다이얼로그 표시
+  void _showCheckRechargeDialog() {
+    showDialog(context: _context, builder: (context) => CheckRechargeDialog(onWatchAd: _rechargeChecksWithAd));
+  }
+
+  // 광고를 통한 체크 기능 충전
+  Future<void> _rechargeChecksWithAd() async {
+    try {
+      final adProvider = Provider.of<AdProvider>(_context, listen: false);
+      final success = await adProvider.showRewardedAd();
+
+      if (success) {
+        _updateGameState(_gameState.copyWith(remainingChecks: GameState.maxChecks));
+        notifyListeners();
+
+        if (_context.mounted) {
+          ScaffoldMessenger.of(_context).showSnackBar(const SnackBar(content: Text('Checks recharged successfully!')));
+        }
+      }
+    } catch (e) {
+      if (_context.mounted) {
+        ScaffoldMessenger.of(
+          _context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to recharge checks. Please try again.')));
+      }
+    }
+  }
+
+  // 현재 보드의 유효성을 검사하고 잘못된 셀을 표시
+  bool _validateBoardAndMarkCells() {
     _wrongCells.clear();
     bool hasError = false;
 
@@ -403,13 +453,47 @@ class GameProvider extends ChangeNotifier {
       }
     }
 
-    if (!hasError) {
-      ScaffoldMessenger.of(
-        _context,
-      ).showSnackBar(const SnackBar(content: Text('All inputs are correct!'), duration: Duration(seconds: 2)));
+    return !hasError;
+  }
+
+  // 보드의 유효성만 검사 (wrongCells 표시하지 않음)
+  bool _validateBoardOnly() {
+    // 스도쿠 기본 규칙 검사 (행, 열, 3x3 박스)
+    for (var i = 0; i < 9; i++) {
+      for (var j = 0; j < 9; j++) {
+        final cell = currentBoard.getCell(i, j);
+        if (cell.number == null) continue;
+
+        // 행 검사
+        if (_hasDuplicateInRow(i, j)) {
+          return false;
+        }
+
+        // 열 검사
+        if (_hasDuplicateInColumn(i, j)) {
+          return false;
+        }
+
+        // 3x3 박스 검사
+        if (_hasDuplicateInBox(i, j)) {
+          return false;
+        }
+      }
     }
 
-    notifyListeners();
+    // 체스 기물 규칙 검사
+    for (var i = 0; i < 9; i++) {
+      for (var j = 0; j < 9; j++) {
+        final cell = currentBoard.getCell(i, j);
+        if (cell.piece != null) {
+          if (_hasChessPieceConflict(i, j)) {
+            return false;
+          }
+        }
+      }
+    }
+
+    return true;
   }
 
   // 행에서 중복 검사
@@ -686,11 +770,19 @@ class GameProvider extends ChangeNotifier {
       }
     }
 
-    // 현재 입력의 유효성 검사
-    checkCurrentInput();
+    // 현재 입력의 유효성만 검사 (wrongCells 표시하지 않음)
+    final isValid = _validateBoardOnly();
 
-    // 잘못된 입력이 있으면 완료되지 않은 상태
-    return _wrongCells.isEmpty;
+    if (!isValid) {
+      ScaffoldMessenger.of(_context).showSnackBar(
+        const SnackBar(
+          content: Text('There are some errors in your solution. Use check feature to find them.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+
+    return isValid;
   }
 
   /// ----------------------------------------- 메모 기능 ------------------------------------------

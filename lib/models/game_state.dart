@@ -6,8 +6,9 @@ import 'package:chessudoku/models/move_history.dart';
 import 'package:equatable/equatable.dart';
 
 class GameState extends Equatable {
+  static const int maxChecks = 3; // 최대 체크 횟수
   final String puzzleId;
-  final String difficulty; // 난이도 추가
+  final String difficulty;
   final GameStatus status;
   final Board initialBoard;
   final Board currentBoard;
@@ -17,6 +18,7 @@ class GameState extends Equatable {
   final int elapsedSeconds;
   final List<int> selectedCell;
   final MoveHistory moveHistory;
+  final int remainingChecks; // 남은 체크 횟수
 
   const GameState({
     required this.puzzleId,
@@ -30,12 +32,14 @@ class GameState extends Equatable {
     this.elapsedSeconds = 0,
     this.selectedCell = const [-1, -1],
     this.moveHistory = const MoveHistory(),
+    this.remainingChecks = maxChecks,
   });
 
   bool get isCompleted => status == GameStatus.completed;
   bool get isPlaying => status == GameStatus.playing;
   bool get hasSelectedCell => selectedCell[0] != -1 && selectedCell[1] != -1;
   bool get canUndo => moveHistory.canUndo;
+  bool get canCheck => remainingChecks > 0;
 
   CellType? get selectedCellType {
     if (!hasSelectedCell) return null;
@@ -55,6 +59,7 @@ class GameState extends Equatable {
       'elapsedSeconds': elapsedSeconds,
       'selectedCell': selectedCell,
       'moveHistory': moveHistory.toJson(),
+      'remainingChecks': remainingChecks,
     };
   }
 
@@ -71,6 +76,7 @@ class GameState extends Equatable {
       elapsedSeconds: json['elapsedSeconds'],
       selectedCell: List<int>.from(json['selectedCell']),
       moveHistory: MoveHistory.fromJson(json['moveHistory']),
+      remainingChecks: json['remainingChecks'] ?? maxChecks,
     );
   }
 
@@ -86,6 +92,7 @@ class GameState extends Equatable {
     int? elapsedSeconds,
     List<int>? selectedCell,
     MoveHistory? moveHistory,
+    int? remainingChecks,
   }) {
     return GameState(
       puzzleId: puzzleId ?? this.puzzleId,
@@ -99,6 +106,7 @@ class GameState extends Equatable {
       elapsedSeconds: elapsedSeconds ?? this.elapsedSeconds,
       selectedCell: selectedCell ?? this.selectedCell,
       moveHistory: moveHistory ?? this.moveHistory,
+      remainingChecks: remainingChecks ?? this.remainingChecks,
     );
   }
 
@@ -115,5 +123,6 @@ class GameState extends Equatable {
     elapsedSeconds,
     selectedCell,
     moveHistory,
+    remainingChecks,
   ];
 }
