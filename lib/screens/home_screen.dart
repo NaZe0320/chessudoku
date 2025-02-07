@@ -1,4 +1,3 @@
-import 'package:chessudoku/models/chance_manager.dart';
 import 'package:chessudoku/providers/authentication_provider.dart';
 import 'package:chessudoku/providers/chance_provider.dart';
 import 'package:chessudoku/screens/game_screen.dart';
