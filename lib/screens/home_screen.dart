@@ -1,4 +1,5 @@
-import 'package:chessudoku/models/chance_manager.dart';
+import 'package:chessudoku/providers/ad_provider.dart';
+import 'package:chessudoku/providers/authentication_provider.dart';
 import 'package:chessudoku/providers/chance_provider.dart';
 import 'package:chessudoku/screens/game_screen.dart';
 import 'package:chessudoku/screens/record_screen.dart';
@@ -20,18 +21,20 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late final ChanceProvider _chanceProvider;
   late ApiService _apiService;
-  Duration? _nextRecharge;
   bool _hasSavedGame = false;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _chanceProvider = ChanceProvider();
     _apiService = ApiService();
     _checkSavedGame();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   Future<void> _checkSavedGame() async {
@@ -42,21 +45,15 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  @override
-  void dispose() {
-    _chanceProvider.dispose();
-    super.dispose();
-  }
-
   Future<void> _startNewGame(BuildContext context) async {
-    if (_chanceProvider.currentChances > 0) {
+    final chanceProvider = context.read<ChanceProvider>();
+
+    if (chanceProvider.currentChances > 0) {
       if (_hasSavedGame) {
-        // Show warning dialog
         final shouldContinue = await showDialog<bool>(context: context, builder: (context) => const WarningDialog());
 
         if (shouldContinue != true) return;
 
-        // Clear saved game if user confirms
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove('game_progress');
       }
@@ -72,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final puzzleData = await _apiService.fetchPuzzle(difficulty);
       // Firebase에서 퍼즐을 성공적으로 받아왔을 때만 기회 소모
-      final success = await _chanceProvider.useChance();
+      final success = await context.read<ChanceProvider>().useChance();
       if (success) {
         if (!mounted) return;
         Navigator.of(context).pop(); // 난이도 선택 다이얼로그 닫기
@@ -95,181 +92,171 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: _chanceProvider,
-      child: Scaffold(
-        body: Consumer<ChanceProvider>(
-          builder: (context, chanceProvider, child) {
-            if (!chanceProvider.isInitialized) {
-              return const Center(child: CircularProgressIndicator());
-            }
+    final authProvider = context.watch<AuthProvider>();
+    final chanceProvider = context.watch<ChanceProvider>();
 
-            return Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.blue.shade900, Colors.blue.shade700],
-                ),
-              ),
-              child: SafeArea(
-                child: Center(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+    if (!chanceProvider.isInitialized) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blue.shade900, Colors.blue.shade700],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // 게임 타이틀
+                  Text(
+                    'ChesSudoku',
+                    style: GoogleFonts.playfairDisplay(
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      shadows: [const Shadow(offset: Offset(2, 2), blurRadius: 3.0, color: Colors.black26)],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // 부제목
+                  Text(
+                    'A unique blend of Chess and Sudoku',
+                    style: GoogleFonts.lato(fontSize: 16, color: Colors.white70),
+                    textAlign: TextAlign.center,
+                  ),
+
+                  const SizedBox(height: 32),
+                  // 폰 기회 표시
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        // 게임 타이틀
-                        Text(
-                          'ChesSudoku',
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 48,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            shadows: [const Shadow(offset: Offset(2, 2), blurRadius: 3.0, color: Colors.black26)],
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // 부제목
-                        Text(
-                          'A unique blend of Chess and Sudoku',
-                          style: GoogleFonts.lato(fontSize: 16, color: Colors.white70),
-                          textAlign: TextAlign.center,
-                        ),
-
-                        const SizedBox(height: 32),
-                        // 폰 기회 표시
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Row(
-                                    children: List.generate(5, (index) {
-                                      return Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                                        child: Text(
-                                          '♟',
-                                          style: TextStyle(
-                                            fontSize: 24,
-                                            color:
-                                                index < chanceProvider.currentChances
-                                                    ? Colors.white
-                                                    : Colors.white.withOpacity(0.3),
-                                          ),
-                                        ),
-                                      );
-                                    }),
-                                  ),
-                                  if (chanceProvider.nextRecharge != null) ...[
-                                    const SizedBox(width: 12),
-                                    const Icon(Icons.timer, color: Colors.white70, size: 16),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      formatDuration(chanceProvider.nextRecharge!),
-                                      style: const TextStyle(color: Colors.white70),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        // 새 게임 시작 버튼
-                        _MenuButton(icon: Icons.play_arrow, label: 'New Game', onPressed: () => _startNewGame(context)),
-
-                        const SizedBox(height: 16),
-
-                        // 게임 이어하기 버튼
-                        _MenuButton(
-                          icon: Icons.refresh,
-                          label: 'Continue Game',
-                          onPressed:
-                              _hasSavedGame
-                                  ? () async {
-                                    final prefs = await SharedPreferences.getInstance();
-                                    final savedGameJson = prefs.getString('game_progress');
-                                    if (savedGameJson != null) {
-                                      final savedGameState = convertJsonToGameState(savedGameJson);
-                                      if (savedGameState != null) {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => GameScreen(gameState: savedGameState),
-                                          ),
-                                        ).then((_) => _checkSavedGame());
-                                      }
-                                    }
-                                  }
-                                  : null,
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // 기록실 버튼
-                        _MenuButton(
-                          icon: Icons.emoji_events,
-                          label: 'Records',
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const RecordScreen()),
-                            ).then((_) => _checkSavedGame());
-                          },
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // 튜토리얼 버튼
-                        _MenuButton(
-                          icon: Icons.school,
-                          label: 'How to Play',
-                          onPressed: () {
-                            //Navigator.push(context, MaterialPageRoute(builder: (context) => const TutorialScreen()));
-                          },
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // 설정 버튼
-                        // _MenuButton(
-                        //   icon: Icons.settings,
-                        //   label: 'Settings',
-                        //   onPressed: () {
-                        //     // TODO: Navigate to settings screen
-                        //   },
-                        // ),
-                        const SizedBox(height: 16),
-
-                        // 체스 기물 아이콘들
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Text('♚', style: TextStyle(color: Colors.white, fontSize: 32)),
-                            SizedBox(width: 16),
-                            Text('♝', style: TextStyle(color: Colors.white, fontSize: 32)),
-                            SizedBox(width: 16),
-                            Text('♞', style: TextStyle(color: Colors.white, fontSize: 32)),
-                            SizedBox(width: 16),
-                            Text('♜', style: TextStyle(color: Colors.white, fontSize: 32)),
-                          ],
+                          children: List.generate(5, (index) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              child: Text(
+                                '♟',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  color:
+                                      index < chanceProvider.currentChances
+                                          ? Colors.white
+                                          : Colors.white.withOpacity(0.3),
+                                ),
+                              ),
+                            );
+                          }),
                         ),
+                        if (chanceProvider.currentChances < 5 && chanceProvider.nextRecharge != null) ...[
+                          const SizedBox(width: 12),
+                          const Icon(Icons.timer, color: Colors.white70, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            formatDuration(chanceProvider.nextRecharge!),
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                        ],
                       ],
                     ),
                   ),
-                ),
+                  const SizedBox(height: 32),
+                  // 새 게임 시작 버튼
+                  _MenuButton(icon: Icons.play_arrow, label: 'New Game', onPressed: () => _startNewGame(context)),
+
+                  const SizedBox(height: 16),
+
+                  // 게임 이어하기 버튼
+                  _MenuButton(
+                    icon: Icons.refresh,
+                    label: 'Continue Game',
+                    onPressed:
+                        _hasSavedGame
+                            ? () async {
+                              final prefs = await SharedPreferences.getInstance();
+                              final savedGameJson = prefs.getString('game_progress');
+                              if (savedGameJson != null) {
+                                final savedGameState = convertJsonToGameState(savedGameJson);
+                                if (savedGameState != null) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => GameScreen(gameState: savedGameState)),
+                                  ).then((_) => _checkSavedGame());
+                                }
+                              }
+                            }
+                            : null,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // 기록실 버튼
+                  _MenuButton(
+                    icon: Icons.emoji_events,
+                    label: 'Records',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const RecordScreen()),
+                      ).then((_) => _checkSavedGame());
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // 튜토리얼 버튼
+                  _MenuButton(
+                    icon: Icons.school,
+                    label: 'How to Play',
+                    onPressed: () {
+                      //Navigator.push(context, MaterialPageRoute(builder: (context) => const TutorialScreen()));
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // 설정 버튼
+                  // _MenuButton(
+                  //   icon: Icons.settings,
+                  //   label: 'Settings',
+                  //   onPressed: () {
+                  //     // TODO: Navigate to settings screen
+                  //   },
+                  // ),
+                  const SizedBox(height: 16),
+
+                  // 체스 기물 아이콘들
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Text('♚', style: TextStyle(color: Colors.white, fontSize: 32)),
+                      SizedBox(width: 16),
+                      Text('♝', style: TextStyle(color: Colors.white, fontSize: 32)),
+                      SizedBox(width: 16),
+                      Text('♞', style: TextStyle(color: Colors.white, fontSize: 32)),
+                      SizedBox(width: 16),
+                      Text('♜', style: TextStyle(color: Colors.white, fontSize: 32)),
+                    ],
+                  ),
+                ],
               ),
-            );
-          },
+            ),
+          ),
         ),
       ),
     );
@@ -280,13 +267,12 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder:
           (context) => WatchAdDialog(
-            nextRecharge: _nextRecharge,
+            nextRecharge: context.read<ChanceProvider>().nextRecharge,
             onWatchAd: () {
               Navigator.pop(context);
               _showRewardedAd().then((_) async {
-                if (_chanceProvider.currentChances > 0) {
+                if (context.read<ChanceProvider>().currentChances > 0) {
                   if (_hasSavedGame) {
-                    // Show warning dialog
                     final shouldContinue = await showDialog<bool>(
                       context: context,
                       builder: (context) => const WarningDialog(),
@@ -294,7 +280,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     if (shouldContinue != true) return;
 
-                    // Clear saved game if user confirms
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.remove('game_progress');
                   }
@@ -310,15 +295,26 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _showRewardedAd() async {
     setState(() => _isLoading = true);
     try {
-      await _chanceProvider.addChance();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Chance added successfully!')));
+      final adProvider = context.read<AdProvider>();
+      final success = await adProvider.showRewardedAd();
+
+      if (success) {
+        await context.read<ChanceProvider>().addChance();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Chance added successfully!')));
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Failed to complete ad viewing. Please try again.')));
+        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Failed to add chance. Please try again.')));
+        ).showSnackBar(const SnackBar(content: Text('Failed to show ad. Please try again.')));
       }
     } finally {
       setState(() => _isLoading = false);

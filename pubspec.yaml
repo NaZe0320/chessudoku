@@ -18,7 +18,12 @@ dependencies:
   dio: ^5.7.0             # HTTP 클라이언트
   json_annotation: ^4.9.0  # JSON 직렬화/역직렬화
   firebase_core: ^2.24.2
-  cloud_firestore: ^4.14.0
+  cloud_firestore: ^4.15.5
+  google_sign_in: ^6.2.1
+  firebase_auth: ^4.20.0
+
+  # 광고
+  google_mobile_ads: ^5.3.1
 
   # 로컬 저장소
   shared_preferences: ^2.4.0  # 간단한 key-value 저장
@@ -35,6 +40,7 @@ dependencies:
   equatable: ^2.0.7         # 값 비교 지원
   collection: ^1.19.0       # 컬렉션 유틸리티
   intl: ^0.20.2             # 국제화/로컬라이제이션
+  path: ^1.9.1
 
   # 분석/로깅
   logger: ^2.5.0           # 로깅

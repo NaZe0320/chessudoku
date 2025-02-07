@@ -5,6 +5,7 @@ import 'package:chessudoku/enums/game_status.dart';
 import 'package:chessudoku/models/game_record.dart';
 import 'package:chessudoku/models/move.dart';
 import 'package:chessudoku/models/move_history.dart';
+import 'package:chessudoku/providers/authentication_provider.dart';
 import 'package:chessudoku/services/storage_service.dart';
 import 'package:chessudoku/widgets/dialogs/completion_dialog.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,8 @@ import 'package:chessudoku/models/game_state.dart';
 import 'package:chessudoku/models/cell.dart';
 import 'package:chessudoku/models/board.dart';
 import 'package:chessudoku/enums/cell_type.dart';
+import 'package:path/path.dart';
+import 'package:provider/provider.dart';
 
 class GameProvider extends ChangeNotifier {
   final BuildContext _context;
@@ -116,8 +119,15 @@ class GameProvider extends ChangeNotifier {
 
   // 게임 완료 시 기록 저장
   Future<void> _saveGameRecord() async {
+    // AuthProvider에서 현재 사용자 ID 가져오기
+    final userId = Provider.of<AuthProvider>(_context, listen: false).user?.uid;
+    if (userId == null) {
+      print('Cannot save record: No user logged in');
+      return;
+    }
+
     final record = GameRecord(
-      difficulty: _gameState.difficulty, // puzzleId format: "difficulty_number"
+      difficulty: _gameState.difficulty,
       elapsedSeconds: _gameState.elapsedSeconds,
       completedAt: DateTime.now(),
       hintsUsed: _gameState.hintsUsed,
@@ -125,9 +135,12 @@ class GameProvider extends ChangeNotifier {
     );
 
     try {
-      await _storageService.saveGameRecord(record);
+      await _storageService.saveGameRecord(record, userId);
       print("Saving Game Record Success");
     } catch (e) {
+      if (_context.mounted) {
+        ScaffoldMessenger.of(_context).showSnackBar(SnackBar(content: Text('Failed to save record: ${e.toString()}')));
+      }
       print('Error saving game record: $e');
     }
   }
@@ -339,6 +352,12 @@ class GameProvider extends ChangeNotifier {
   }
 
   // ----------------------------------- 유효성 검사 ----------------------------------
+
+  // 힌트 사용
+  void useHint() {
+    _updateGameState(_gameState.copyWith(hintsUsed: _gameState.hintsUsed + 1));
+    checkCurrentInput();
+  }
 
   // 현재 입력된 숫자들의 유효성 검사
   void checkCurrentInput() {
