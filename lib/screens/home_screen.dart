@@ -142,39 +142,35 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Colors.white.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Column(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Row(
-                              children: List.generate(5, (index) {
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                                  child: Text(
-                                    '♟',
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      color:
-                                          index < chanceProvider.currentChances
-                                              ? Colors.white
-                                              : Colors.white.withOpacity(0.3),
-                                    ),
-                                  ),
-                                );
-                              }),
-                            ),
-                            if (chanceProvider.nextRecharge != null) ...[
-                              const SizedBox(width: 12),
-                              const Icon(Icons.timer, color: Colors.white70, size: 16),
-                              const SizedBox(width: 4),
-                              Text(
-                                formatDuration(chanceProvider.nextRecharge!),
-                                style: const TextStyle(color: Colors.white70),
+                          children: List.generate(5, (index) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              child: Text(
+                                '♟',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  color:
+                                      index < chanceProvider.currentChances
+                                          ? Colors.white
+                                          : Colors.white.withOpacity(0.3),
+                                ),
                               ),
-                            ],
-                          ],
+                            );
+                          }),
                         ),
+                        if (chanceProvider.currentChances < 5 && chanceProvider.nextRecharge != null) ...[
+                          const SizedBox(width: 12),
+                          const Icon(Icons.timer, color: Colors.white70, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            formatDuration(chanceProvider.nextRecharge!),
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                        ],
                       ],
                     ),
                   ),

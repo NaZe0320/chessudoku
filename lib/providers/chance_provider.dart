@@ -11,7 +11,9 @@ class ChanceProvider extends ChangeNotifier {
   Chance? _chance;
   Timer? _timer;
   bool _isInitialized = false;
+  bool _isDisposed = false;
   Duration? _remainingTime;
+  StreamSubscription? _chanceSubscription;
 
   ChanceProvider(this._userId, this._chanceService) {
     _initialize();
@@ -22,21 +24,34 @@ class ChanceProvider extends ChangeNotifier {
   Duration? get nextRecharge => _remainingTime;
 
   Future<void> _initialize() async {
-    // 초기 데이터 로드
-    _chance = await _chanceService.getChance(_userId);
-    _updateRemainingTime();
-    _isInitialized = true;
-    notifyListeners();
-
-    // 실시간 업데이트 구독
-    _chanceService.chanceStream(_userId).listen((chance) {
-      _chance = chance;
+    try {
+      // 초기 데이터 로드
+      _chance = await _chanceService.getChance(_userId);
       _updateRemainingTime();
-      notifyListeners();
-    });
 
-    // 타이머 시작
-    _startTimer();
+      if (!_isDisposed) {
+        _isInitialized = true;
+        notifyListeners();
+
+        // 실시간 업데이트 구독
+        _chanceSubscription = _chanceService.chanceStream(_userId).listen((chance) {
+          if (!_isDisposed) {
+            _chance = chance;
+            _updateRemainingTime();
+            notifyListeners();
+          }
+        });
+
+        // 타이머 시작
+        _startTimer();
+      }
+    } catch (e) {
+      print('Error initializing ChanceProvider: $e');
+      if (!_isDisposed) {
+        _isInitialized = true;
+        notifyListeners();
+      }
+    }
   }
 
   void _startTimer() {
