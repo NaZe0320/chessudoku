@@ -1,3 +1,4 @@
+import 'package:chessudoku/providers/ad_provider.dart';
 import 'package:chessudoku/providers/authentication_provider.dart';
 import 'package:chessudoku/providers/chance_provider.dart';
 import 'package:chessudoku/screens/game_screen.dart';
@@ -294,15 +295,26 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _showRewardedAd() async {
     setState(() => _isLoading = true);
     try {
-      await context.read<ChanceProvider>().addChance();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Chance added successfully!')));
+      final adProvider = context.read<AdProvider>();
+      final success = await adProvider.showRewardedAd();
+
+      if (success) {
+        await context.read<ChanceProvider>().addChance();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Chance added successfully!')));
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Failed to complete ad viewing. Please try again.')));
+        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Failed to add chance. Please try again.')));
+        ).showSnackBar(const SnackBar(content: Text('Failed to show ad. Please try again.')));
       }
     } finally {
       setState(() => _isLoading = false);

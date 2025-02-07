@@ -1,8 +1,10 @@
 import 'package:chessudoku/firebase_options.dart';
+import 'package:chessudoku/providers/ad_provider.dart';
 import 'package:chessudoku/providers/authentication_provider.dart';
 import 'package:chessudoku/providers/chance_provider.dart';
 import 'package:chessudoku/screens/home_screen.dart';
 import 'package:chessudoku/screens/login_screen.dart';
+import 'package:chessudoku/services/ad_service.dart';
 import 'package:chessudoku/services/authentication_service.dart';
 import 'package:chessudoku/services/chance_service.dart';
 import 'package:chessudoku/services/storage_service.dart';
@@ -25,6 +27,10 @@ void main() async {
     const SystemUiOverlayStyle(statusBarColor: Colors.transparent, statusBarIconBrightness: Brightness.light),
   );
 
+  // AdService 초기화
+  final adService = AdService();
+  await adService.initialize(); // AdService 초기화 먼저 실행
+
   // StorageService 초기화
   final storageService = await StorageService.initialize();
   runApp(
@@ -35,6 +41,7 @@ void main() async {
           create: (context) => ChanceProvider('', ChanceService()),
           update: (context, auth, previous) => ChanceProvider(auth.user?.uid ?? '', ChanceService()),
         ),
+        ChangeNotifierProvider(create: (_) => AdProvider(adService)),
       ],
       child: ChessSudokuApp(storageService: storageService),
     ),

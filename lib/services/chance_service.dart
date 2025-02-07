@@ -6,7 +6,6 @@ class ChanceService {
 
   // 사용자의 기회 정보 가져오기
   Future<Chance> getChance(String userId) async {
-    print("TEST : $userId");
     final doc = await _firestore.collection('users').doc(userId).collection('game_data').doc('chance').get();
 
     if (!doc.exists) {
