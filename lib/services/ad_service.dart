@@ -3,6 +3,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AdService {
   static const String _testRewardedAdUnitId = 'ca-app-pub-3940256099942544/5224354917';
+  static const String _testBannerAdUnitId = 'ca-app-pub-3940256099942544/6300978111';
 
   RewardedAd? _rewardedAd;
   bool _isRewardedAdReady = false;
@@ -10,6 +11,23 @@ class AdService {
   Future<void> initialize() async {
     await MobileAds.instance.initialize();
     await _loadRewardedAd();
+  }
+
+  BannerAd createBannerAd() {
+    return BannerAd(
+      adUnitId: _testBannerAdUnitId,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          print('Banner ad loaded successfully');
+        },
+        onAdFailedToLoad: (ad, error) {
+          print('Banner ad failed to load: ${error.message}');
+          ad.dispose();
+        },
+      ),
+    );
   }
 
   Future<void> _loadRewardedAd() async {

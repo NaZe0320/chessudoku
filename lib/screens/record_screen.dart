@@ -1,5 +1,6 @@
 // record_screen.dart
 
+import 'package:chessudoku/widgets/common/banner_ad.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:chessudoku/models/game_record.dart';
@@ -150,13 +151,21 @@ class _RecordScreenState extends State<RecordScreen> with SingleTickerProviderSt
           indicatorColor: Colors.white,
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
+      body: Column(
         children: [
-          _buildRecordList(null), // All
-          _buildRecordList('easy'), // Easy
-          _buildRecordList('medium'), // Medium
-          _buildRecordList('hard'), // Hard
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildRecordList(null), // All
+                _buildRecordList('easy'), // Easy
+                _buildRecordList('medium'), // Medium
+                _buildRecordList('hard'), // Hard
+              ],
+            ),
+          ),
+          // Add Banner Ad at the bottom
+          const BannerAdWidget(),
         ],
       ),
     );

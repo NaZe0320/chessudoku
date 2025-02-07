@@ -3,6 +3,7 @@ import 'package:chessudoku/services/storage_service.dart';
 import 'package:chessudoku/widgets/board/game_controls.dart';
 import 'package:chessudoku/widgets/board/number_pad.dart';
 import 'package:chessudoku/widgets/board/sudoku_board.dart';
+import 'package:chessudoku/widgets/common/banner_ad.dart';
 import 'package:chessudoku/widgets/dialogs/reset_confirmation_dialog.dart';
 import 'package:chessudoku/widgets/pause_overlay.dart';
 import 'package:flutter/material.dart';
@@ -173,6 +174,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                                 ),
                               ),
                             ),
+                            const BannerAdWidget(),
                           ],
                         ),
                       ),

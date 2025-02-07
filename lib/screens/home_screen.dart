@@ -6,6 +6,7 @@ import 'package:chessudoku/screens/record_screen.dart';
 import 'package:chessudoku/services/api_service.dart';
 import 'package:chessudoku/utils/converts.dart';
 import 'package:chessudoku/utils/helpers.dart';
+import 'package:chessudoku/widgets/common/banner_ad.dart';
 import 'package:chessudoku/widgets/dialogs/warning_dialog.dart';
 import 'package:chessudoku/widgets/dialogs/watch_ad_dialog.dart';
 import 'package:flutter/material.dart';
@@ -109,153 +110,162 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // 게임 타이틀
-                  Text(
-                    'ChesSudoku',
-                    style: GoogleFonts.playfairDisplay(
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      shadows: [const Shadow(offset: Offset(2, 2), blurRadius: 3.0, color: Colors.black26)],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // 부제목
-                  Text(
-                    'A unique blend of Chess and Sudoku',
-                    style: GoogleFonts.lato(fontSize: 16, color: Colors.white70),
-                    textAlign: TextAlign.center,
-                  ),
-
-                  const SizedBox(height: 32),
-                  // 폰 기회 표시
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+          child: Column(
+            children: [
+              Expanded(
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Row(
-                          children: List.generate(5, (index) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
-                              child: Text(
-                                '♟',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  color:
-                                      index < chanceProvider.currentChances
-                                          ? Colors.white
-                                          : Colors.white.withOpacity(0.3),
-                                ),
-                              ),
-                            );
-                          }),
-                        ),
-                        if (chanceProvider.currentChances < 5 && chanceProvider.nextRecharge != null) ...[
-                          const SizedBox(width: 12),
-                          const Icon(Icons.timer, color: Colors.white70, size: 16),
-                          const SizedBox(width: 4),
-                          Text(
-                            formatDuration(chanceProvider.nextRecharge!),
-                            style: const TextStyle(color: Colors.white70),
+                        // 게임 타이틀
+                        Text(
+                          'ChesSudoku',
+                          style: GoogleFonts.playfairDisplay(
+                            fontSize: 48,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            shadows: [const Shadow(offset: Offset(2, 2), blurRadius: 3.0, color: Colors.black26)],
                           ),
-                        ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // 부제목
+                        Text(
+                          'A unique blend of Chess and Sudoku',
+                          style: GoogleFonts.lato(fontSize: 16, color: Colors.white70),
+                          textAlign: TextAlign.center,
+                        ),
+
+                        const SizedBox(height: 32),
+                        // 폰 기회 표시
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                children: List.generate(5, (index) {
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                                    child: Text(
+                                      '♟',
+                                      style: TextStyle(
+                                        fontSize: 24,
+                                        color:
+                                            index < chanceProvider.currentChances
+                                                ? Colors.white
+                                                : Colors.white.withOpacity(0.3),
+                                      ),
+                                    ),
+                                  );
+                                }),
+                              ),
+                              if (chanceProvider.currentChances < 5 && chanceProvider.nextRecharge != null) ...[
+                                const SizedBox(width: 12),
+                                const Icon(Icons.timer, color: Colors.white70, size: 16),
+                                const SizedBox(width: 4),
+                                Text(
+                                  formatDuration(chanceProvider.nextRecharge!),
+                                  style: const TextStyle(color: Colors.white70),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        // 새 게임 시작 버튼
+                        _MenuButton(icon: Icons.play_arrow, label: 'New Game', onPressed: () => _startNewGame(context)),
+
+                        const SizedBox(height: 16),
+
+                        // 게임 이어하기 버튼
+                        _MenuButton(
+                          icon: Icons.refresh,
+                          label: 'Continue Game',
+                          onPressed:
+                              _hasSavedGame
+                                  ? () async {
+                                    final prefs = await SharedPreferences.getInstance();
+                                    final savedGameJson = prefs.getString('game_progress');
+                                    if (savedGameJson != null) {
+                                      final savedGameState = convertJsonToGameState(savedGameJson);
+                                      if (savedGameState != null) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => GameScreen(gameState: savedGameState),
+                                          ),
+                                        ).then((_) => _checkSavedGame());
+                                      }
+                                    }
+                                  }
+                                  : null,
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // 기록실 버튼
+                        _MenuButton(
+                          icon: Icons.emoji_events,
+                          label: 'Records',
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const RecordScreen()),
+                            ).then((_) => _checkSavedGame());
+                          },
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // 튜토리얼 버튼
+                        _MenuButton(
+                          icon: Icons.school,
+                          label: 'How to Play',
+                          onPressed: () {
+                            //Navigator.push(context, MaterialPageRoute(builder: (context) => const TutorialScreen()));
+                          },
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // 설정 버튼
+                        // _MenuButton(
+                        //   icon: Icons.settings,
+                        //   label: 'Settings',
+                        //   onPressed: () {
+                        //     // TODO: Navigate to settings screen
+                        //   },
+                        // ),
+                        const SizedBox(height: 16),
+
+                        // 체스 기물 아이콘들
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Text('♚', style: TextStyle(color: Colors.white, fontSize: 32)),
+                            SizedBox(width: 16),
+                            Text('♝', style: TextStyle(color: Colors.white, fontSize: 32)),
+                            SizedBox(width: 16),
+                            Text('♞', style: TextStyle(color: Colors.white, fontSize: 32)),
+                            SizedBox(width: 16),
+                            Text('♜', style: TextStyle(color: Colors.white, fontSize: 32)),
+                          ],
+                        ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
-                  // 새 게임 시작 버튼
-                  _MenuButton(icon: Icons.play_arrow, label: 'New Game', onPressed: () => _startNewGame(context)),
-
-                  const SizedBox(height: 16),
-
-                  // 게임 이어하기 버튼
-                  _MenuButton(
-                    icon: Icons.refresh,
-                    label: 'Continue Game',
-                    onPressed:
-                        _hasSavedGame
-                            ? () async {
-                              final prefs = await SharedPreferences.getInstance();
-                              final savedGameJson = prefs.getString('game_progress');
-                              if (savedGameJson != null) {
-                                final savedGameState = convertJsonToGameState(savedGameJson);
-                                if (savedGameState != null) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => GameScreen(gameState: savedGameState)),
-                                  ).then((_) => _checkSavedGame());
-                                }
-                              }
-                            }
-                            : null,
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // 기록실 버튼
-                  _MenuButton(
-                    icon: Icons.emoji_events,
-                    label: 'Records',
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const RecordScreen()),
-                      ).then((_) => _checkSavedGame());
-                    },
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // 튜토리얼 버튼
-                  _MenuButton(
-                    icon: Icons.school,
-                    label: 'How to Play',
-                    onPressed: () {
-                      //Navigator.push(context, MaterialPageRoute(builder: (context) => const TutorialScreen()));
-                    },
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // 설정 버튼
-                  // _MenuButton(
-                  //   icon: Icons.settings,
-                  //   label: 'Settings',
-                  //   onPressed: () {
-                  //     // TODO: Navigate to settings screen
-                  //   },
-                  // ),
-                  const SizedBox(height: 16),
-
-                  // 체스 기물 아이콘들
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text('♚', style: TextStyle(color: Colors.white, fontSize: 32)),
-                      SizedBox(width: 16),
-                      Text('♝', style: TextStyle(color: Colors.white, fontSize: 32)),
-                      SizedBox(width: 16),
-                      Text('♞', style: TextStyle(color: Colors.white, fontSize: 32)),
-                      SizedBox(width: 16),
-                      Text('♜', style: TextStyle(color: Colors.white, fontSize: 32)),
-                    ],
-                  ),
-                ],
+                ),
               ),
-            ),
+              const BannerAdWidget(), // 배너 광고 추가
+            ],
           ),
         ),
       ),
