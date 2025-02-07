@@ -353,6 +353,12 @@ class GameProvider extends ChangeNotifier {
 
   // ----------------------------------- 유효성 검사 ----------------------------------
 
+  // 힌트 사용
+  void useHint() {
+    _updateGameState(_gameState.copyWith(hintsUsed: _gameState.hintsUsed + 1));
+    checkCurrentInput();
+  }
+
   // 현재 입력된 숫자들의 유효성 검사
   void checkCurrentInput() {
     _wrongCells.clear();

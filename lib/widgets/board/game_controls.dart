@@ -22,7 +22,11 @@ class GameControls extends StatelessWidget {
         _ControlButton(
           icon: Icons.lightbulb_outline,
           label: 'Check',
-          onPressed: () => context.read<GameProvider>().checkCurrentInput(),
+          onPressed: () {
+            final provider = context.read<GameProvider>();
+            provider.useHint();
+            provider.checkCurrentInput();
+          },
         ),
       ],
     );
