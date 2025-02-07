@@ -1,9 +1,11 @@
-// records_screen.dart
+// record_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:chessudoku/models/game_record.dart';
 import 'package:chessudoku/services/storage_service.dart';
 import 'package:chessudoku/utils/helpers.dart';
+import 'package:chessudoku/providers/authentication_provider.dart';
 
 class RecordScreen extends StatefulWidget {
   const RecordScreen({super.key});
@@ -17,6 +19,7 @@ class _RecordScreenState extends State<RecordScreen> with SingleTickerProviderSt
   late StorageService _storageService;
   List<GameRecord> _records = [];
   bool _isLoading = true;
+  String? _userId;
 
   @override
   void initState() {
@@ -27,15 +30,22 @@ class _RecordScreenState extends State<RecordScreen> with SingleTickerProviderSt
 
   Future<void> _initializeStorage() async {
     _storageService = await StorageService.initialize();
+    _userId = context.read<AuthProvider>().user?.uid;
     await _loadRecords();
   }
 
   Future<void> _loadRecords() async {
+    if (_userId == null) return;
+
     setState(() => _isLoading = true);
     try {
-      _records = await _storageService.getAllGameRecords();
+      _records = await _storageService.getAllGameRecords(_userId!);
+
+      print("TEST : $_userId / $_records");
     } catch (e) {
-      print('Error loading records: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error loading records: ${e.toString()}')));
+      }
     } finally {
       setState(() => _isLoading = false);
     }
@@ -48,6 +58,10 @@ class _RecordScreenState extends State<RecordScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    if (_userId == null) {
+      return const Scaffold(body: Center(child: Text('Please login to view records')));
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Records'),
@@ -125,8 +139,10 @@ class _RecordScreenState extends State<RecordScreen> with SingleTickerProviderSt
   }
 
   String _formatDate(DateTime date) {
-    return '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')} '
-        '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    return '${date.year}/${date.month.toString().padLeft(2, '0')}/'
+        '${date.day.toString().padLeft(2, '0')} '
+        '${date.hour.toString().padLeft(2, '0')}:'
+        '${date.minute.toString().padLeft(2, '0')}';
   }
 
   @override
