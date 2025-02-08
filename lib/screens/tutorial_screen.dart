@@ -1,8 +1,7 @@
-// tutorial_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:chessudoku/enums/chess_piece.dart';
+import 'package:chessudoku/utils/app_localizations.dart';
 
 class TutorialScreen extends StatefulWidget {
   const TutorialScreen({super.key});
@@ -23,9 +22,11 @@ class _TutorialScreenState extends State<TutorialScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('How to Play'),
+        title: Text(l10n.translate('howToPlayTitle')),
         centerTitle: true,
         backgroundColor: Colors.blue.shade900,
         foregroundColor: Colors.white,
@@ -43,7 +44,6 @@ class _TutorialScreenState extends State<TutorialScreen> {
               children: const [_BasicRulePage(), _ChessPiecesPage(), _GameplayPage(), _TipsPage()],
             ),
           ),
-          // Page indicator
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
@@ -59,7 +59,7 @@ class _TutorialScreenState extends State<TutorialScreen> {
                             );
                           }
                           : null,
-                  child: const Text('Previous'),
+                  child: Text(l10n.translate('previous')),
                 ),
                 Row(
                   mainAxisSize: MainAxisSize.min,
@@ -86,7 +86,7 @@ class _TutorialScreenState extends State<TutorialScreen> {
                             );
                           }
                           : null,
-                  child: const Text('Next'),
+                  child: Text(l10n.translate('next')),
                 ),
               ],
             ),
@@ -102,29 +102,31 @@ class _BasicRulePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Basic Rules',
+            l10n.translate('basicRules'),
             style: GoogleFonts.playfairDisplay(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
           ),
           const SizedBox(height: 16),
           _RuleCard(
-            title: 'Sudoku Rules',
-            content: 'Fill the 9×9 grid with numbers 1-9, ensuring each number appears:',
-            rules: const ['Once in each row', 'Once in each column', 'Once in each 3×3 box'],
+            title: l10n.translate('sudokuRulesTitle'),
+            content: l10n.translate('sudokuRulesContent'),
+            rules: [l10n.translate('sudokuRule1'), l10n.translate('sudokuRule2'), l10n.translate('sudokuRule3')],
           ),
           const SizedBox(height: 16),
           _RuleCard(
-            title: 'Chess Twist',
-            content: 'Chess pieces on the board add special rules:',
-            rules: const [
-              'Numbers in cells affected by chess pieces must be unique',
-              'Chess pieces cannot move but affect cells according to their movement patterns',
-              'Multiple chess pieces can affect the same cell',
+            title: l10n.translate('chessTwistTitle'),
+            content: l10n.translate('chessTwistContent'),
+            rules: [
+              l10n.translate('chessTwistRule1'),
+              l10n.translate('chessTwistRule2'),
+              l10n.translate('chessTwistRule3'),
             ],
           ),
         ],
@@ -138,43 +140,44 @@ class _ChessPiecesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Chess Pieces',
+            l10n.translate('chessPieces'),
             style: GoogleFonts.playfairDisplay(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
           ),
           const SizedBox(height: 16),
           _ChessPieceCard(
             piece: ChessPiece.king,
             symbol: '♚',
-            title: 'King',
-            description: 'Numbers in all adjacent cells (including diagonals) must be different.',
+            title: l10n.translate('kingTitle'),
+            description: l10n.translate('kingDescription'),
           ),
           const SizedBox(height: 12),
           _ChessPieceCard(
             piece: ChessPiece.bishop,
             symbol: '♝',
-            title: 'Bishop',
-            description: 'Numbers along each diagonal line must be different until blocked by another piece.',
+            title: l10n.translate('bishopTitle'),
+            description: l10n.translate('bishopDescription'),
           ),
           const SizedBox(height: 12),
           _ChessPieceCard(
             piece: ChessPiece.knight,
             symbol: '♞',
-            title: 'Knight',
-            description: 'Numbers in all cells reachable by L-shaped moves must be different.',
+            title: l10n.translate('knightTitle'),
+            description: l10n.translate('knightDescription'),
           ),
           const SizedBox(height: 12),
           _ChessPieceCard(
             piece: ChessPiece.rook,
             symbol: '♜',
-            title: 'Rook',
-            description:
-                'Numbers along horizontal and vertical lines must be different until blocked by another piece.',
+            title: l10n.translate('rookTitle'),
+            description: l10n.translate('rookDescription'),
           ),
         ],
       ),
@@ -187,43 +190,45 @@ class _GameplayPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'How to Play',
+            l10n.translate('howToPlayTitle'),
             style: GoogleFonts.playfairDisplay(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
           ),
           const SizedBox(height: 16),
           _InstructionCard(
             icon: Icons.touch_app,
-            title: 'Select & Input',
-            instructions: const [
-              'Tap a cell to select it',
-              'Use the number pad to input numbers',
-              'Tap the same number to clear the cell',
+            title: l10n.translate('selectInputTitle'),
+            instructions: [
+              l10n.translate('selectInputRule1'),
+              l10n.translate('selectInputRule2'),
+              l10n.translate('selectInputRule3'),
             ],
           ),
           const SizedBox(height: 12),
           _InstructionCard(
             icon: Icons.edit_note,
-            title: 'Memo Mode',
-            instructions: const [
-              'Toggle memo mode to take notes',
-              'Use numbers to add/remove candidates',
-              'Helpful for tracking possibilities',
+            title: l10n.translate('memoModeTitle'),
+            instructions: [
+              l10n.translate('memoModeRule1'),
+              l10n.translate('memoModeRule2'),
+              l10n.translate('memoModeRule3'),
             ],
           ),
           const SizedBox(height: 12),
           _InstructionCard(
             icon: Icons.check_circle,
-            title: 'Check Feature',
-            instructions: const [
-              'Use check button to verify your progress',
-              'Wrong numbers will be highlighted in red',
-              'Limited checks available per puzzle',
+            title: l10n.translate('checkFeatureTitle'),
+            instructions: [
+              l10n.translate('checkFeatureRule1'),
+              l10n.translate('checkFeatureRule2'),
+              l10n.translate('checkFeatureRule3'),
             ],
           ),
         ],
@@ -237,42 +242,40 @@ class _TipsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Tips & Strategies',
+            l10n.translate('tipsAndStrategies'),
             style: GoogleFonts.playfairDisplay(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
           ),
           const SizedBox(height: 16),
           _TipCard(
             icon: Icons.lightbulb,
-            title: 'Start with Chess Pieces',
-            content:
-                'Begin by identifying cells affected by chess pieces. These have additional constraints that can help narrow down possibilities.',
+            title: l10n.translate('startWithChessTitle'),
+            content: l10n.translate('startWithChessContent'),
           ),
           const SizedBox(height: 12),
           _TipCard(
             icon: Icons.grid_on,
-            title: 'Use Traditional Techniques',
-            content:
-                'Standard Sudoku techniques like scanning and elimination still work. Look for cells with the fewest possibilities.',
+            title: l10n.translate('traditionalTechTitle'),
+            content: l10n.translate('traditionalTechContent'),
           ),
           const SizedBox(height: 12),
           _TipCard(
             icon: Icons.edit_note,
-            title: 'Take Notes',
-            content:
-                'Use the memo feature to keep track of possible numbers for each cell. Update these as you fill in numbers.',
+            title: l10n.translate('takeNotesTitle'),
+            content: l10n.translate('takeNotesContent'),
           ),
           const SizedBox(height: 12),
           _TipCard(
             icon: Icons.psychology,
-            title: 'Think Ahead',
-            content:
-                'Consider how placing a number might affect both Sudoku rules and chess piece constraints before making a move.',
+            title: l10n.translate('thinkAheadTitle'),
+            content: l10n.translate('thinkAheadContent'),
           ),
         ],
       ),
