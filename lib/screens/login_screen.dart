@@ -111,12 +111,12 @@ class LoginScreen extends StatelessWidget {
                     children: [
                       TextButton(
                         onPressed: () => launchURL(AppConstants.termsUrl),
-                        child: const Text('이용약관', style: TextStyle(color: Colors.white70)),
+                        child: Text(l10n.translate('termsOfService'), style: const TextStyle(color: Colors.white70)),
                       ),
                       const Text('|', style: TextStyle(color: Colors.white70)),
                       TextButton(
                         onPressed: () => launchURL(AppConstants.privacyUrl),
-                        child: const Text('개인정보처리방침', style: TextStyle(color: Colors.white70)),
+                        child: Text(l10n.translate('privacyPolicy'), style: const TextStyle(color: Colors.white70)),
                       ),
                     ],
                   ),

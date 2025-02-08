@@ -82,6 +82,25 @@ class AppLocalizations {
       'noChecksRemaining': 'No Checks Remaining',
       'watchAdForChecks': 'Would you like to watch an ad to recharge 3 checks?',
 
+      'allInputsCorrect': 'All inputs are correct!',
+      'solutionHasErrors': 'There are some errors in your solution. Use check feature to find them.',
+      'checksRechargedSuccess': 'Checks recharged successfully!',
+      'failedToRechargeChecks': 'Failed to recharge checks. Please try again.',
+
+      'account': 'Account',
+      'deleteAccount': 'Delete Account',
+      'deleteAccountMessage': 'All game data will be permanently deleted',
+      'deleteAccountConfirm': 'Are you sure you want to delete your account?\nAll data will be permanently deleted.',
+      'delete': 'Delete',
+      'logout': 'Logout',
+      'logoutConfirm': 'Are you sure you want to logout?',
+      'termsAndPolicies': 'Terms and Policies',
+      'termsOfService': 'Terms of Service',
+      'privacyPolicy': 'Privacy Policy',
+      'cannotOpenUrl': 'Cannot open URL',
+      'deleteAccountFailed': 'Failed to delete account: ',
+      'logoutFailed': 'Failed to logout: ',
+
       // 튜토리얼
       'howToPlayTitle': 'How to Play',
       'basicRules': 'Basic Rules',
@@ -204,6 +223,25 @@ class AppLocalizations {
       'noChecksRemaining': '확인 기능 소진',
       'watchAdForChecks': '광고를 시청하고 확인 기능 3회를 충전하시겠습니까?',
 
+      'allInputsCorrect': '모든 입력이 올바릅니다!',
+      'solutionHasErrors': '해답에 오류가 있습니다. 확인 기능을 사용하여 찾아보세요.',
+      'checksRechargedSuccess': '확인 기능이 충전되었습니다!',
+      'failedToRechargeChecks': '확인 기능 충전에 실패했습니다. 다시 시도해주세요.',
+
+      'account': '계정',
+      'deleteAccount': '계정 삭제',
+      'deleteAccountMessage': '모든 게임 데이터가 영구적으로 삭제됩니다',
+      'deleteAccountConfirm': '정말로 계정을 삭제하시겠습니까?\n모든 데이터가 영구적으로 삭제됩니다.',
+      'delete': '삭제',
+      'logout': '로그아웃',
+      'logoutConfirm': '정말로 로그아웃 하시겠습니까?',
+      'termsAndPolicies': '약관 및 정책',
+      'termsOfService': '이용약관',
+      'privacyPolicy': '개인정보처리방침',
+      'cannotOpenUrl': 'URL을 열 수 없습니다',
+      'deleteAccountFailed': '계정 삭제 실패: ',
+      'logoutFailed': '로그아웃 실패: ',
+
       //튜토리얼
       'howToPlayTitle': '게임 방법',
       'basicRules': '기본 규칙',
@@ -320,6 +358,25 @@ class AppLocalizations {
 
       'noChecksRemaining': 'チェック機能消費',
       'watchAdForChecks': '広告を視聴してチェック機能を3回充電しますか？',
+
+      'allInputsCorrect': 'すべての入力が正しいです！',
+      'solutionHasErrors': '解答にエラーがあります。チェック機能を使用して確認してください。',
+      'checksRechargedSuccess': 'チェック機能が充電されました！',
+      'failedToRechargeChecks': 'チェック機能の充電に失敗しました。もう一度お試しください。',
+
+      'account': 'アカウント',
+      'deleteAccount': 'アカウント削除',
+      'deleteAccountMessage': 'すべてのゲームデータが完全に削除されます',
+      'deleteAccountConfirm': '本当にアカウントを削除しますか？\nすべてのデータが完全に削除されます。',
+      'delete': '削除',
+      'logout': 'ログアウト',
+      'logoutConfirm': '本当にログアウトしますか？',
+      'termsAndPolicies': '利用規約とポリシー',
+      'termsOfService': '利用規約',
+      'privacyPolicy': 'プライバシーポリシー',
+      'cannotOpenUrl': 'URLを開けません',
+      'deleteAccountFailed': 'アカウント削除に失敗しました: ',
+      'logoutFailed': 'ログアウトに失敗しました: ',
 
       //튜토리얼
       'howToPlayTitle': '遊び方',

@@ -8,6 +8,7 @@ import 'package:chessudoku/models/move_history.dart';
 import 'package:chessudoku/providers/ad_provider.dart';
 import 'package:chessudoku/providers/authentication_provider.dart';
 import 'package:chessudoku/services/storage_service.dart';
+import 'package:chessudoku/utils/app_localizations.dart';
 import 'package:chessudoku/widgets/dialogs/check_recharge_dialog.dart';
 import 'package:chessudoku/widgets/dialogs/completion_dialog.dart';
 import 'package:flutter/material.dart';
@@ -365,17 +366,19 @@ class GameProvider extends ChangeNotifier {
     }
 
     _wrongCells.clear();
-
     _updateGameState(_gameState.copyWith(hintsUsed: _gameState.hintsUsed + 1));
-
     _updateGameState(_gameState.copyWith(remainingChecks: _gameState.remainingChecks - 1));
 
     final isValid = _validateBoardAndMarkCells();
 
     if (isValid) {
-      ScaffoldMessenger.of(
-        _context,
-      ).showSnackBar(const SnackBar(content: Text('All inputs are correct!'), duration: Duration(seconds: 2)));
+      final l10n = AppLocalizations.of(_context);
+      ScaffoldMessenger.of(_context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.translate('allInputsCorrect')), // 새로운 번역 키 추가
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
 
     notifyListeners();
@@ -391,20 +394,22 @@ class GameProvider extends ChangeNotifier {
     try {
       final adProvider = Provider.of<AdProvider>(_context, listen: false);
       final success = await adProvider.showRewardedAd();
+      final l10n = AppLocalizations.of(_context);
 
       if (success) {
         _updateGameState(_gameState.copyWith(remainingChecks: GameState.maxChecks));
         notifyListeners();
 
         if (_context.mounted) {
-          ScaffoldMessenger.of(_context).showSnackBar(const SnackBar(content: Text('Checks recharged successfully!')));
+          ScaffoldMessenger.of(
+            _context,
+          ).showSnackBar(SnackBar(content: Text(l10n.translate('checksRechargedSuccess'))));
         }
       }
     } catch (e) {
       if (_context.mounted) {
-        ScaffoldMessenger.of(
-          _context,
-        ).showSnackBar(const SnackBar(content: Text('Failed to recharge checks. Please try again.')));
+        final l10n = AppLocalizations.of(_context);
+        ScaffoldMessenger.of(_context).showSnackBar(SnackBar(content: Text(l10n.translate('failedToRechargeChecks'))));
       }
     }
   }
@@ -774,10 +779,11 @@ class GameProvider extends ChangeNotifier {
     final isValid = _validateBoardOnly();
 
     if (!isValid) {
+      final l10n = AppLocalizations.of(_context);
       ScaffoldMessenger.of(_context).showSnackBar(
-        const SnackBar(
-          content: Text('There are some errors in your solution. Use check feature to find them.'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(l10n.translate('solutionHasErrors')), // 새로운 번역 키 추가
+          duration: const Duration(seconds: 2),
         ),
       );
     }

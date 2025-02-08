@@ -13,14 +13,13 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final authProvider = context.watch<AuthProvider>();
 
     void launchURL(String url) async {
       try {
         await launchUrl(Uri.parse(url));
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('URL을 열 수 없습니다.')));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.translate('cannotOpenUrl'))));
         }
       }
     }
@@ -69,16 +68,16 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const Divider(),
                 _SettingsSection(
-                  title: '계정',
+                  title: l10n.translate('account'),
                   children: [
                     ListTile(
-                      title: const Text('계정 삭제'),
-                      subtitle: const Text('모든 게임 데이터가 영구적으로 삭제됩니다'),
+                      title: Text(l10n.translate('deleteAccount')),
+                      subtitle: Text(l10n.translate('deleteAccountMessage')),
                       trailing: const Icon(Icons.delete_forever, color: Colors.red),
                       onTap: () => _showDeleteAccountDialog(context),
                     ),
                     ListTile(
-                      title: const Text('로그아웃'),
+                      title: Text(l10n.translate('logout')),
                       trailing: const Icon(Icons.logout),
                       onTap: () => _showLogoutDialog(context),
                     ),
@@ -86,15 +85,15 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const Divider(),
                 _SettingsSection(
-                  title: '약관 및 정책',
+                  title: l10n.translate('termsAndPolicies'),
                   children: [
                     ListTile(
-                      title: const Text('이용약관'),
+                      title: Text(l10n.translate('termsOfService')),
                       trailing: const Icon(Icons.arrow_forward_ios),
                       onTap: () => launchURL(AppConstants.termsUrl),
                     ),
                     ListTile(
-                      title: const Text('개인정보처리방침'),
+                      title: Text(l10n.translate('privacyPolicy')),
                       trailing: const Icon(Icons.arrow_forward_ios),
                       onTap: () => launchURL(AppConstants.privacyUrl),
                     ),
@@ -110,14 +109,15 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showDeleteAccountDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('계정 삭제'),
-            content: const Text('정말로 계정을 삭제하시겠습니까?\n모든 데이터가 영구적으로 삭제됩니다.'),
+            title: Text(l10n.translate('deleteAccount')),
+            content: Text(l10n.translate('deleteAccountConfirm')),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
+              TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.translate('cancel'))),
               ElevatedButton(
                 onPressed: () async {
                   try {
@@ -127,12 +127,14 @@ class SettingsScreen extends StatelessWidget {
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('계정 삭제 실패: $e')));
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('${l10n.translate('deleteAccountFailed')}$e')));
                     }
                   }
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text('삭제'),
+                child: Text(l10n.translate('delete')),
               ),
             ],
           ),
@@ -140,14 +142,15 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showLogoutDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('로그아웃'),
-            content: const Text('정말로 로그아웃 하시겠습니까?'),
+            title: Text(l10n.translate('logout')),
+            content: Text(l10n.translate('logoutConfirm')),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
+              TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.translate('cancel'))),
               ElevatedButton(
                 onPressed: () async {
                   try {
@@ -157,11 +160,13 @@ class SettingsScreen extends StatelessWidget {
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('로그아웃 실패: $e')));
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('${l10n.translate('logoutFailed')}$e')));
                     }
                   }
                 },
-                child: const Text('로그아웃'),
+                child: Text(l10n.translate('logout')),
               ),
             ],
           ),
