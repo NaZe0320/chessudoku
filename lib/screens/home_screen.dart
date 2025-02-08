@@ -3,6 +3,7 @@ import 'package:chessudoku/providers/authentication_provider.dart';
 import 'package:chessudoku/providers/chance_provider.dart';
 import 'package:chessudoku/screens/game_screen.dart';
 import 'package:chessudoku/screens/record_screen.dart';
+import 'package:chessudoku/screens/setting_screen.dart';
 import 'package:chessudoku/screens/tutorial_screen.dart';
 import 'package:chessudoku/services/api_service.dart';
 import 'package:chessudoku/utils/converts.dart';
@@ -238,13 +239,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 16),
 
                         // 설정 버튼
-                        // _MenuButton(
-                        //   icon: Icons.settings,
-                        //   label: 'Settings',
-                        //   onPressed: () {
-                        //     // TODO: Navigate to settings screen
-                        //   },
-                        // ),
+                        _MenuButton(
+                          icon: Icons.settings,
+                          label: 'Settings',
+                          onPressed: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
+                          },
+                        ),
                         const SizedBox(height: 16),
 
                         // 체스 기물 아이콘들

@@ -8,10 +8,10 @@ class StorageService {
   static const String _gameProgressKey = 'game_progress';
   static const int recordsPerPage = 20; // 한 페이지당 기록 수
 
-  final SharedPreferences _preferences;
+  final SharedPreferences preferences;
   final FirebaseFirestore _firestore;
 
-  StorageService(this._preferences) : _firestore = FirebaseFirestore.instance;
+  StorageService(this.preferences) : _firestore = FirebaseFirestore.instance;
 
   static Future<StorageService> initialize() async {
     final prefs = await SharedPreferences.getInstance();
@@ -84,7 +84,7 @@ class StorageService {
   Future<GameRecord?> getBestRecordByDifficulty(String userId, String difficulty) async {
     try {
       final cacheKey = 'best_record_${userId}_$difficulty';
-      final cachedRecord = _preferences.getString(cacheKey);
+      final cachedRecord = preferences.getString(cacheKey);
 
       if (cachedRecord != null) {
         return GameRecord.fromMap(jsonDecode(cachedRecord));
@@ -105,7 +105,7 @@ class StorageService {
       final record = GameRecord.fromMap({...snapshot.docs.first.data(), 'id': snapshot.docs.first.id});
 
       // 캐시에 저장
-      await _preferences.setString(cacheKey, jsonEncode(record.toMap()));
+      await preferences.setString(cacheKey, jsonEncode(record.toMap()));
 
       return record;
     } catch (e) {
@@ -117,12 +117,12 @@ class StorageService {
   // 게임 진행 상태 저장
   Future<void> saveGameProgress(GameState state) async {
     final stateJson = state.toJson();
-    await _preferences.setString(_gameProgressKey, jsonEncode(stateJson));
+    await preferences.setString(_gameProgressKey, jsonEncode(stateJson));
   }
 
   // 게임 진행 상태 불러오기
   Future<GameState?> loadGameProgress() async {
-    final stateJson = _preferences.getString(_gameProgressKey);
+    final stateJson = preferences.getString(_gameProgressKey);
     if (stateJson == null) return null;
 
     try {
@@ -136,6 +136,6 @@ class StorageService {
 
   // 게임 진행 상태 삭제
   Future<void> clearGameProgress() async {
-    await _preferences.remove(_gameProgressKey);
+    await preferences.remove(_gameProgressKey);
   }
 }

@@ -11,6 +11,9 @@ dependencies:
   flutter:
     sdk: flutter
 
+  flutter_localizations:
+    sdk: flutter
+
   # 상태 관리
   provider: ^6.1.2         # 상태 관리를 위한 Provider 패턴 구현
 
@@ -39,7 +42,7 @@ dependencies:
   # 유틸리티
   equatable: ^2.0.7         # 값 비교 지원
   collection: ^1.19.0       # 컬렉션 유틸리티
-  intl: ^0.20.2             # 국제화/로컬라이제이션
+  intl: ^0.19.0             # 국제화/로컬라이제이션
   path: ^1.9.1
 
   # 분석/로깅
