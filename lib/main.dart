@@ -34,6 +34,7 @@ void main() async {
   final adService = AdService();
   await adService.initialize(); // AdService 초기화 먼저 실행
 
+  final localeProvider = await LocaleProvider.initialize();
   // StorageService 초기화
   final storageService = await StorageService.initialize();
   runApp(

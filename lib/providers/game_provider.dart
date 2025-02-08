@@ -372,7 +372,7 @@ class GameProvider extends ChangeNotifier {
 
     final isValid = _validateBoardAndMarkCells();
 
-    if (!isValid) {
+    if (isValid) {
       ScaffoldMessenger.of(
         _context,
       ).showSnackBar(const SnackBar(content: Text('All inputs are correct!'), duration: Duration(seconds: 2)));

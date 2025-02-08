@@ -11,11 +11,11 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final localizations = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(localizations.settings),
+        title: Text(l10n.translate('settings')),
         centerTitle: true,
         backgroundColor: Colors.blue.shade900,
         foregroundColor: Colors.white,
@@ -26,31 +26,64 @@ class SettingsScreen extends StatelessWidget {
           Expanded(
             child: ListView(
               children: [
-                ListTile(
-                  title: Text(localizations.language),
-                  trailing: Consumer<LocaleProvider>(
-                    builder:
-                        (context, provider, child) => DropdownButton<String>(
-                          value: provider.locale.languageCode,
-                          items:
-                              LocaleProvider.supportedLanguages.entries.map((entry) {
-                                return DropdownMenuItem(value: entry.key, child: Text(entry.value));
-                              }).toList(),
-                          onChanged: (String? languageCode) {
-                            if (languageCode != null) {
-                              provider.setLocale(languageCode);
-                            }
-                          },
-                        ),
-                  ),
+                _SettingsSection(
+                  title: l10n.translate('language'),
+                  children: [
+                    Consumer<LocaleProvider>(
+                      builder:
+                          (context, provider, child) => Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: DropdownButtonFormField<String>(
+                              value: provider.locale.languageCode,
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              ),
+                              items:
+                                  LocaleProvider.supportedLanguages.entries.map((entry) {
+                                    return DropdownMenuItem(
+                                      value: entry.key,
+                                      child: Text(entry.value, style: const TextStyle(fontSize: 16)),
+                                    );
+                                  }).toList(),
+                              onChanged: (String? languageCode) {
+                                if (languageCode != null) {
+                                  provider.setLocale(languageCode);
+                                }
+                              },
+                            ),
+                          ),
+                    ),
+                  ],
                 ),
-                // 여기에 다른 설정 항목들을 추가할 수 있습니다
+                const Divider(),
               ],
             ),
           ),
           BannerAdWidget(),
         ],
       ),
+    );
+  }
+}
+
+class _SettingsSection extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+
+  const _SettingsSection({required this.title, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue.shade900)),
+        ),
+        ...children,
+      ],
     );
   }
 }

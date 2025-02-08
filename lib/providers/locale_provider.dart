@@ -1,9 +1,9 @@
 import 'package:chessudoku/services/storage_service.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class LocaleProvider extends ChangeNotifier {
-  static const String _localeKey = 'app_locale';
+  static const String _localeKey = 'locale';
+  static const Map<String, String> supportedLanguages = {'en': 'English', 'ko': '한국어', 'ja': '日本語'};
   final StorageService _storageService;
 
   Locale _locale;
@@ -12,11 +12,14 @@ class LocaleProvider extends ChangeNotifier {
 
   Locale get locale => _locale;
 
-  static const Map<String, String> supportedLanguages = {
-    'en': 'English',
-    'ko': '한국어',
-    // 여기에 추가 언어를 넣을 수 있습니다
-  };
+  static Future<LocaleProvider> initialize() async {
+    final storageService = await StorageService.initialize();
+    return LocaleProvider(storageService);
+  }
+
+  String getCurrentLanguageName() {
+    return supportedLanguages[_locale.languageCode] ?? 'English';
+  }
 
   Future<void> setLocale(String languageCode) async {
     if (!supportedLanguages.containsKey(languageCode)) return;

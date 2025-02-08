@@ -6,6 +6,7 @@ import 'package:chessudoku/screens/record_screen.dart';
 import 'package:chessudoku/screens/setting_screen.dart';
 import 'package:chessudoku/screens/tutorial_screen.dart';
 import 'package:chessudoku/services/api_service.dart';
+import 'package:chessudoku/utils/app_localizations.dart';
 import 'package:chessudoku/utils/converts.dart';
 import 'package:chessudoku/utils/helpers.dart';
 import 'package:chessudoku/widgets/common/banner_ad.dart';
@@ -97,6 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final chanceProvider = context.watch<ChanceProvider>();
+    final l10n = AppLocalizations.of(context); // 지역화 인스턴스 가져오기
 
     if (!chanceProvider.isInitialized) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -122,10 +124,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         // 게임 타이틀
+                        const SizedBox(height: 16),
                         Text(
-                          'ChesSudoku',
+                          l10n.appName,
                           style: GoogleFonts.playfairDisplay(
-                            fontSize: 48,
+                            fontSize: 36,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                             shadows: [const Shadow(offset: Offset(2, 2), blurRadius: 3.0, color: Colors.black26)],
@@ -136,12 +139,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
                         // 부제목
                         Text(
-                          'A unique blend of Chess and Sudoku',
-                          style: GoogleFonts.lato(fontSize: 16, color: Colors.white70),
+                          l10n.subtitle,
+                          style: GoogleFonts.lato(fontSize: 14, color: Colors.white70),
                           textAlign: TextAlign.center,
                         ),
 
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 24),
                         // 폰 기회 표시
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -183,14 +186,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 32),
                         // 새 게임 시작 버튼
-                        _MenuButton(icon: Icons.play_arrow, label: 'New Game', onPressed: () => _startNewGame(context)),
+                        _MenuButton(
+                          icon: Icons.play_arrow,
+                          label: l10n.translate('newGame'),
+                          onPressed: () => _startNewGame(context),
+                        ),
 
                         const SizedBox(height: 16),
 
                         // 게임 이어하기 버튼
                         _MenuButton(
                           icon: Icons.refresh,
-                          label: 'Continue Game',
+                          label: l10n.translate('continueGame'),
                           onPressed:
                               _hasSavedGame
                                   ? () async {
@@ -216,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         // 기록실 버튼
                         _MenuButton(
                           icon: Icons.emoji_events,
-                          label: 'Records',
+                          label: l10n.translate('records'),
                           onPressed: () {
                             Navigator.push(
                               context,
@@ -230,7 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         // 튜토리얼 버튼
                         _MenuButton(
                           icon: Icons.school,
-                          label: 'How to Play',
+                          label: l10n.translate('howToPlay'),
                           onPressed: () {
                             Navigator.push(context, MaterialPageRoute(builder: (context) => const TutorialScreen()));
                           },
@@ -241,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         // 설정 버튼
                         _MenuButton(
                           icon: Icons.settings,
-                          label: 'Settings',
+                          label: l10n.translate('settings'),
                           onPressed: () {
                             Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
                           },
@@ -305,7 +312,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // 광고 시청 메서드 수정
   Future<void> _showRewardedAd() async {
+    final l10n = AppLocalizations.of(context);
     setState(() => _isLoading = true);
+
     try {
       final adProvider = context.read<AdProvider>();
       final success = await adProvider.showRewardedAd();
@@ -313,20 +322,16 @@ class _HomeScreenState extends State<HomeScreen> {
       if (success) {
         await context.read<ChanceProvider>().addChance();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Chance added successfully!')));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.translate('chanceAddedSuccess'))));
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Failed to complete ad viewing. Please try again.')));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.translate('adViewingFailed'))));
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Failed to show ad. Please try again.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.translate('adShowFailed'))));
       }
     } finally {
       setState(() => _isLoading = false);
@@ -334,6 +339,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showDifficultyDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     showDialog(
       context: context,
       barrierDismissible: !_isLoading,
@@ -347,24 +354,27 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('Select Difficulty', style: GoogleFonts.lato(fontSize: 24, fontWeight: FontWeight.bold)),
+                      Text(
+                        l10n.translate('selectDifficulty'),
+                        style: GoogleFonts.lato(fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 24),
                       _DifficultyOption(
-                        difficulty: 'Easy',
+                        difficulty: l10n.translate('easy'),
                         description: '41-46 hints',
                         color: Colors.green,
                         onTap: _isLoading ? null : () => _startGame(context, 'easy'),
                       ),
                       const SizedBox(height: 12),
                       _DifficultyOption(
-                        difficulty: 'Medium',
+                        difficulty: l10n.translate('medium'),
                         description: '31-36 hints',
                         color: Colors.orange,
                         onTap: _isLoading ? null : () => _startGame(context, 'medium'),
                       ),
                       const SizedBox(height: 12),
                       _DifficultyOption(
-                        difficulty: 'Hard',
+                        difficulty: l10n.translate('hard'),
                         description: '21-26 hints',
                         color: Colors.red,
                         onTap: _isLoading ? null : () => _startGame(context, 'hard'),
@@ -396,7 +406,7 @@ class _MenuButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           foregroundColor: Colors.blue.shade900,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
           elevation: 3,
           disabledBackgroundColor: Colors.grey[300],
