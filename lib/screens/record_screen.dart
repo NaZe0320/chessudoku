@@ -1,5 +1,6 @@
 // record_screen.dart
 
+import 'package:chessudoku/utils/app_localizations.dart';
 import 'package:chessudoku/widgets/common/banner_ad.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -101,7 +102,10 @@ class _RecordScreenState extends State<RecordScreen> with SingleTickerProviderSt
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error loading records: ${e.toString()}')));
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('${l10n.translate('errorLoading')}: ${e.toString()}')));
       }
     } finally {
       if (mounted) {
@@ -112,19 +116,25 @@ class _RecordScreenState extends State<RecordScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (_userId == null) {
-      return const Scaffold(body: Center(child: Text('Please login to view records')));
+      return Scaffold(body: Center(child: Text(l10n.translate('loginRequired'))));
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Records'),
+        title: Text(l10n.translate('records')),
         centerTitle: true,
         backgroundColor: Colors.blue.shade900,
         foregroundColor: Colors.white,
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [Tab(text: 'All'), Tab(text: 'Easy'), Tab(text: 'Medium'), Tab(text: 'Hard')],
+          tabs: [
+            Tab(text: l10n.translate('all')),
+            Tab(text: l10n.translate('easy')),
+            Tab(text: l10n.translate('medium')),
+            Tab(text: l10n.translate('hard')),
+          ],
           onTap: (index) {
             // 탭이 변경될 때마다 해당 난이도의 기록 로드
             String? difficulty;
@@ -172,25 +182,44 @@ class _RecordScreenState extends State<RecordScreen> with SingleTickerProviderSt
   }
 
   Widget _buildRecordList(String? difficulty) {
+    final l10n = AppLocalizations.of(context);
     final records = _records[difficulty] ?? [];
 
     if (records.isEmpty) {
       if (_isLoading[difficulty] == true) {
-        return const Center(child: CircularProgressIndicator());
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [const CircularProgressIndicator(), const SizedBox(height: 16), Text(l10n.translate('loading'))],
+          ),
+        );
       }
-      return const Center(child: Text('No records yet', style: TextStyle(fontSize: 16, color: Colors.grey)));
+      return Center(child: Text(l10n.translate('noRecords'), style: const TextStyle(fontSize: 16, color: Colors.grey)));
     }
 
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.all(16),
-      itemCount: records.length + 1, // +1 for loading indicator
+      itemCount: records.length + 1,
       itemBuilder: (context, index) {
         if (index == records.length) {
           if (_isLoading[difficulty] == true) {
-            return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 8),
+                    Text(l10n.translate('loading')),
+                  ],
+                ),
+              ),
+            );
           } else if (_hasMoreData[difficulty] == false) {
-            return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: Text('No more records')));
+            return Center(
+              child: Padding(padding: const EdgeInsets.all(16.0), child: Text(l10n.translate('noMoreRecords'))),
+            );
           }
           return const SizedBox.shrink();
         }
@@ -209,8 +238,8 @@ class _RecordScreenState extends State<RecordScreen> with SingleTickerProviderSt
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             subtitle: Text(
-              'Completed: ${_formatDate(record.completedAt)}\n'
-              'Hints used: ${record.hintsUsed}',
+              '${l10n.translate('completed')}: ${_formatDate(record.completedAt)}\n'
+              '${l10n.translate('hintsUsed')}: ${record.hintsUsed}',
             ),
             isThreeLine: true,
           ),
