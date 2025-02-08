@@ -160,6 +160,9 @@ class AppConstants {
 
   // 색상 상수
   static const difficultyColors = {'easy': Colors.green, 'medium': Colors.orange, 'hard': Colors.red};
+
+  static const termsUrl = 'https://sparkling-carpenter-3b6.notion.site/194ed533ac7180268928d9757a69e79e?pvs=4';
+  static const privacyUrl = 'https://sparkling-carpenter-3b6.notion.site/194ed533ac7180c48006d235a273d6c1?pvs=4';
 }
 
 // 라우트 이름 상수

@@ -1,3 +1,4 @@
+import 'package:chessudoku/main.dart';
 import 'package:chessudoku/providers/authentication_provider.dart';
 import 'package:chessudoku/widgets/common/banner_ad.dart';
 import 'package:flutter/material.dart';
@@ -90,12 +91,12 @@ class SettingsScreen extends StatelessWidget {
                     ListTile(
                       title: const Text('이용약관'),
                       trailing: const Icon(Icons.arrow_forward_ios),
-                      onTap: () => launchURL('your-terms-url'),
+                      onTap: () => launchURL(AppConstants.termsUrl),
                     ),
                     ListTile(
                       title: const Text('개인정보처리방침'),
                       trailing: const Icon(Icons.arrow_forward_ios),
-                      onTap: () => launchURL('your-privacy-url'),
+                      onTap: () => launchURL(AppConstants.privacyUrl),
                     ),
                   ],
                 ),

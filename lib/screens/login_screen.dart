@@ -1,3 +1,4 @@
+import 'package:chessudoku/main.dart';
 import 'package:chessudoku/providers/authentication_provider.dart';
 import 'package:chessudoku/utils/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -109,12 +110,12 @@ class LoginScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       TextButton(
-                        onPressed: () => launchURL('your-terms-url'),
+                        onPressed: () => launchURL(AppConstants.termsUrl),
                         child: const Text('이용약관', style: TextStyle(color: Colors.white70)),
                       ),
                       const Text('|', style: TextStyle(color: Colors.white70)),
                       TextButton(
-                        onPressed: () => launchURL('your-privacy-url'),
+                        onPressed: () => launchURL(AppConstants.privacyUrl),
                         child: const Text('개인정보처리방침', style: TextStyle(color: Colors.white70)),
                       ),
                     ],
