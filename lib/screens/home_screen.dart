@@ -3,6 +3,7 @@ import 'package:chessudoku/providers/authentication_provider.dart';
 import 'package:chessudoku/providers/chance_provider.dart';
 import 'package:chessudoku/screens/game_screen.dart';
 import 'package:chessudoku/screens/record_screen.dart';
+import 'package:chessudoku/screens/tutorial_screen.dart';
 import 'package:chessudoku/services/api_service.dart';
 import 'package:chessudoku/utils/converts.dart';
 import 'package:chessudoku/utils/helpers.dart';
@@ -230,7 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           icon: Icons.school,
                           label: 'How to Play',
                           onPressed: () {
-                            //Navigator.push(context, MaterialPageRoute(builder: (context) => const TutorialScreen()));
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => const TutorialScreen()));
                           },
                         ),
 
