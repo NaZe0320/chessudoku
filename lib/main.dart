@@ -10,7 +10,9 @@ import 'package:chessudoku/services/authentication_service.dart';
 import 'package:chessudoku/services/chance_service.dart';
 import 'package:chessudoku/services/storage_service.dart';
 import 'package:chessudoku/utils/app_localizations.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -21,6 +23,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Firebase Analytics 초기화 추가
+  final analytics = FirebaseAnalytics.instance;
+
+  // Firebase Crashlytics 초기화 추가
+  await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
 
   // 세로 모드로 고정
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
