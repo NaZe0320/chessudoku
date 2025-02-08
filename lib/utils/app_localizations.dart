@@ -54,6 +54,8 @@ class AppLocalizations {
       'chanceAddedSuccess': 'Chance added successfully!',
       'adViewingFailed': 'Failed to complete ad viewing. Please try again.',
       'adShowFailed': 'Failed to show ad. Please try again.',
+      'continueAsGuest': 'Continue as Guest',
+      'continueWithGoogle': 'Continue with Google',
     },
     'ko': {
       'appName': '체스도쿠',
@@ -97,6 +99,8 @@ class AppLocalizations {
       'chanceAddedSuccess': '기회가 추가되었습니다!',
       'adViewingFailed': '광고 시청을 완료하지 못했습니다. 다시 시도해주세요.',
       'adShowFailed': '광고를 표시할 수 없습니다. 다시 시도해주세요.',
+      'continueAsGuest': '게스트로 계속하기',
+      'continueWithGoogle': '구글로 계속하기',
     },
     'ja': {
       'appName': 'チェス数独',
@@ -140,6 +144,8 @@ class AppLocalizations {
       'chanceAddedSuccess': 'チャンスが追加されました！',
       'adViewingFailed': '広告視聴を完了できませんでした。もう一度お試しください。',
       'adShowFailed': '広告を表示できません。もう一度お試しください。',
+      'continueAsGuest': 'ゲストとして続ける',
+      'continueWithGoogle': 'Googleで続ける',
     },
   };
 
