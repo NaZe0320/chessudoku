@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:chessudoku/utils/helpers.dart';
+import 'package:chessudoku/utils/app_localizations.dart';
 
 class WatchAdDialog extends StatefulWidget {
   final Duration? nextRecharge;
@@ -44,19 +45,21 @@ class _WatchAdDialogState extends State<WatchAdDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Column(
         children: [
           const Icon(Icons.video_library, size: 48, color: Colors.blue),
           const SizedBox(height: 16),
-          const Text('No Chances Left'),
+          Text(l10n.translate('noChances')),
         ],
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('Would you like to watch a video ad to get an extra chance?', textAlign: TextAlign.center),
+          Text(l10n.translate('watchAdMessage'), textAlign: TextAlign.center),
 
           if (_remainingTime != null && _remainingTime! > Duration.zero) ...[
             const SizedBox(height: 16),
@@ -68,7 +71,7 @@ class _WatchAdDialogState extends State<WatchAdDialog> {
                 const Icon(Icons.timer, size: 16, color: Colors.grey),
                 const SizedBox(width: 8),
                 Text(
-                  'Next free chance in: ${formatDuration(_remainingTime!)}',
+                  '${l10n.translate('nextChance')}: ${formatDuration(_remainingTime!)}',
                   style: const TextStyle(color: Colors.grey),
                 ),
               ],
@@ -77,11 +80,11 @@ class _WatchAdDialogState extends State<WatchAdDialog> {
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.translate('cancel'))),
         ElevatedButton.icon(
           onPressed: widget.onWatchAd,
           icon: const Icon(Icons.play_circle_outline),
-          label: const Text('Watch Ad'),
+          label: Text(l10n.translate('watchAd')),
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
         ),
       ],

@@ -1,6 +1,5 @@
-// widgets/dialogs/check_recharge_dialog.dart
-
 import 'package:flutter/material.dart';
+import 'package:chessudoku/utils/app_localizations.dart';
 
 class CheckRechargeDialog extends StatelessWidget {
   final VoidCallback onWatchAd;
@@ -9,25 +8,27 @@ class CheckRechargeDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Column(
         children: [
           const Icon(Icons.check_circle_outline, size: 48, color: Colors.blue),
           const SizedBox(height: 16),
-          const Text('No Checks Remaining'),
+          Text(l10n.translate('noChecksRemaining')),
         ],
       ),
-      content: const Text('Would you like to watch an ad to recharge 3 checks?', textAlign: TextAlign.center),
+      content: Text(l10n.translate('watchAdForChecks'), textAlign: TextAlign.center),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.translate('cancel'))),
         ElevatedButton.icon(
           onPressed: () {
             Navigator.pop(context);
             onWatchAd();
           },
           icon: const Icon(Icons.play_circle_outline),
-          label: const Text('WATCH AD'),
+          label: Text(l10n.translate('watchAd')),
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
         ),
       ],

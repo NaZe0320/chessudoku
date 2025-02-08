@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:chessudoku/utils/app_localizations.dart';
 
 Future<bool?> showResetConfirmationDialog(BuildContext context) {
+  final l10n = AppLocalizations.of(context);
+
   return showDialog<bool>(
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: const Text('Reset Board'),
-        content: const Text(
-          'This will clear all your progress and restore the board to its initial state. Are you sure you want to continue?',
-        ),
+        title: Text(l10n.translate('resetBoard')),
+        content: Text(l10n.translate('resetMessage')),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('CANCEL')),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.translate('cancel'))),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-            child: const Text('RESET'),
+            child: Text(l10n.translate('reset')),
           ),
         ],
       );

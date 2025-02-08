@@ -1,7 +1,6 @@
-// completion_dialog.dart
-
 import 'package:flutter/material.dart';
 import 'package:chessudoku/utils/helpers.dart';
+import 'package:chessudoku/utils/app_localizations.dart';
 
 class CompletionDialog extends StatelessWidget {
   final int elapsedSeconds;
@@ -12,6 +11,8 @@ class CompletionDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -21,13 +22,13 @@ class CompletionDialog extends StatelessWidget {
           children: [
             const Icon(Icons.emoji_events, size: 64, color: Colors.amber),
             const SizedBox(height: 16),
-            const Text('Puzzle Completed!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            Text(l10n.translate('puzzleCompleted'), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
-            _buildStatRow('Time', formatDuration(Duration(seconds: elapsedSeconds))),
+            _buildStatRow(context, l10n.translate('time'), formatDuration(Duration(seconds: elapsedSeconds))),
             const SizedBox(height: 8),
-            _buildStatRow('Difficulty', difficulty),
+            _buildStatRow(context, l10n.translate('difficulty'), l10n.translate(difficulty.toLowerCase())),
             const SizedBox(height: 8),
-            _buildStatRow('Hints Used', hintsUsed.toString()),
+            _buildStatRow(context, l10n.translate('hintsUsed'), hintsUsed.toString()),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -37,7 +38,7 @@ class CompletionDialog extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
               ),
-              child: const Text('Continue'),
+              child: Text(l10n.translate('continue')),
             ),
           ],
         ),
@@ -45,7 +46,7 @@ class CompletionDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildStatRow(String label, String value) {
+  Widget _buildStatRow(BuildContext context, String label, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
