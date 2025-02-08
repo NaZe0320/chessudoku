@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AdService {
-  static const String _testRewardedAdUnitId = 'ca-app-pub-3940256099942544/5224354917';
-  static const String _testBannerAdUnitId = 'ca-app-pub-3940256099942544/6300978111';
+  static const String _rewardedAdUnitId = 'ca-app-pub-3877424348956918/7757087581';
+  static const String _bannerAdUnitId = 'ca-app-pub-3877424348956918/9556382279';
 
   RewardedAd? _rewardedAd;
   bool _isRewardedAdReady = false;
@@ -15,7 +15,7 @@ class AdService {
 
   BannerAd createBannerAd() {
     return BannerAd(
-      adUnitId: _testBannerAdUnitId,
+      adUnitId: _bannerAdUnitId,
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
@@ -33,7 +33,7 @@ class AdService {
   Future<void> _loadRewardedAd() async {
     try {
       await RewardedAd.load(
-        adUnitId: _testRewardedAdUnitId,
+        adUnitId: _rewardedAdUnitId,
         request: const AdRequest(),
         rewardedAdLoadCallback: RewardedAdLoadCallback(
           onAdLoaded: (ad) {
