@@ -1,5 +1,6 @@
 import 'package:chessudoku/providers/game_provider.dart';
 import 'package:chessudoku/services/storage_service.dart';
+import 'package:chessudoku/utils/app_localizations.dart';
 import 'package:chessudoku/widgets/board/game_controls.dart';
 import 'package:chessudoku/widgets/board/number_pad.dart';
 import 'package:chessudoku/widgets/board/sudoku_board.dart';
@@ -53,11 +54,13 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return FutureBuilder<StorageService>(
       future: StorageService.initialize(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(child: Text(l10n.translate('loading')));
         }
 
         return ChangeNotifierProvider(
@@ -71,7 +74,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                   children: [
                     Scaffold(
                       appBar: AppBar(
-                        title: Text(provider.gameState.difficulty.toUpperCase()),
+                        title: Text(l10n.translate(provider.gameState.difficulty)),
                         centerTitle: true,
                         elevation: 0,
                         toolbarHeight: 40,
@@ -93,7 +96,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                                 (context, provider, child) => IconButton(
                                   icon: const Icon(Icons.undo),
                                   onPressed: provider.canUndo ? () => provider.undo() : null,
-                                  tooltip: 'Undo',
+                                  tooltip: l10n.translate('undo'),
                                 ),
                           ),
 
@@ -106,7 +109,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                                 context.read<GameProvider>().resetBoard();
                               }
                             },
-                            tooltip: 'Reset board',
+                            tooltip: l10n.translate('reset'),
                           ),
                         ],
                       ),
@@ -149,6 +152,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                                               provider.pauseTimer();
                                             }
                                           },
+                                          tooltip:
+                                              provider.isPaused ? l10n.translate('resume') : l10n.translate('pause'),
                                         ),
                                   ),
                                 ],
