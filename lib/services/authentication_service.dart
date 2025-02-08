@@ -64,4 +64,43 @@ class AuthService {
     }
     await _auth.signOut();
   }
+
+  Future<void> deleteAccount() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) throw Exception('User not found');
+
+      // Firebase Firestore에서 사용자 데이터 삭제
+      final batch = _firestore.batch();
+
+      // 사용자 기본 데이터 삭제
+      batch.delete(_firestore.collection('users').doc(user.uid));
+
+      // 게임 기록 삭제
+      final recordsSnapshot = await _firestore.collection('users').doc(user.uid).collection('records').get();
+      for (var doc in recordsSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      // 게임 데이터 삭제
+      final gameDataSnapshot = await _firestore.collection('users').doc(user.uid).collection('game_data').get();
+      for (var doc in gameDataSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      // 배치 작업 실행
+      await batch.commit();
+
+      // Google 로그인 사용자인 경우 Google 연결 해제
+      if (await _googleSignIn.isSignedIn()) {
+        await _googleSignIn.disconnect();
+      }
+
+      // Firebase Auth 계정 삭제
+      await user.delete();
+    } catch (e) {
+      print('Error during account deletion: $e');
+      rethrow;
+    }
+  }
 }

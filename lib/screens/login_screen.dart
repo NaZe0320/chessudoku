@@ -3,6 +3,7 @@ import 'package:chessudoku/utils/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -11,6 +12,16 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final authProvider = context.watch<AuthProvider>();
+
+    void launchURL(String url) async {
+      try {
+        await launchUrl(Uri.parse(url));
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('URL을 열 수 없습니다.')));
+        }
+      }
+    }
 
     return Scaffold(
       body: Container(
@@ -92,6 +103,20 @@ class LoginScreen extends StatelessWidget {
                       Text('♞', style: TextStyle(color: Colors.white, fontSize: 32)),
                       SizedBox(width: 16),
                       Text('♜', style: TextStyle(color: Colors.white, fontSize: 32)),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextButton(
+                        onPressed: () => launchURL('your-terms-url'),
+                        child: const Text('이용약관', style: TextStyle(color: Colors.white70)),
+                      ),
+                      const Text('|', style: TextStyle(color: Colors.white70)),
+                      TextButton(
+                        onPressed: () => launchURL('your-privacy-url'),
+                        child: const Text('개인정보처리방침', style: TextStyle(color: Colors.white70)),
+                      ),
                     ],
                   ),
 

@@ -51,6 +51,8 @@ dependencies:
   logger: ^2.5.0           # 로깅
   sentry_flutter: ^7.10.0  # 에러 추적 (선택적)
 
+  url_launcher: ^6.2.4
+
   cupertino_icons: ^1.0.8
   crypto: ^3.0.3
 
