@@ -161,9 +161,6 @@ class GameProvider extends ChangeNotifier {
       ),
     );
 
-    // 게임 기록 저장
-    await _saveGameRecord();
-
     // 게임 완료 시 저장된 게임 상태 삭제
     await _storageService.clearGameProgress();
 
@@ -177,6 +174,31 @@ class GameProvider extends ChangeNotifier {
               elapsedSeconds: _gameState.elapsedSeconds,
               hintsUsed: _gameState.hintsUsed,
               difficulty: _gameState.difficulty,
+              onRate: (rating, comment) async {
+                // 평가와 함께 게임 기록 저장
+                final record = GameRecord(
+                  difficulty: _gameState.difficulty,
+                  elapsedSeconds: _gameState.elapsedSeconds,
+                  completedAt: DateTime.now(),
+                  hintsUsed: _gameState.hintsUsed,
+                  puzzleId: _gameState.puzzleId,
+                  rating: rating,
+                  comment: comment,
+                );
+
+                final userId = Provider.of<AuthProvider>(_context, listen: false).user?.uid;
+                if (userId != null) {
+                  try {
+                    await _storageService.saveGameRecord(record, userId);
+                  } catch (e) {
+                    if (_context.mounted) {
+                      ScaffoldMessenger.of(
+                        _context,
+                      ).showSnackBar(SnackBar(content: Text('Failed to save record: ${e.toString()}')));
+                    }
+                  }
+                }
+              },
             ),
       );
 

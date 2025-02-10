@@ -101,6 +101,9 @@ class AppLocalizations {
       'deleteAccountFailed': 'Failed to delete account: ',
       'logoutFailed': 'Failed to logout: ',
 
+      'ratePuzzle': "Rate this Puzzle's Difficulty",
+      'addComment': 'Add a comment (optional)',
+
       // 튜토리얼
       'howToPlayTitle': 'How to Play',
       'basicRules': 'Basic Rules',
@@ -242,6 +245,9 @@ class AppLocalizations {
       'deleteAccountFailed': '계정 삭제 실패: ',
       'logoutFailed': '로그아웃 실패: ',
 
+      'ratePuzzle': '이 퍼즐의 난이도 평가하기',
+      'addComment': '코멘트를 추가해주세요(선택)',
+
       //튜토리얼
       'howToPlayTitle': '게임 방법',
       'basicRules': '기본 규칙',
@@ -377,6 +383,9 @@ class AppLocalizations {
       'cannotOpenUrl': 'URLを開けません',
       'deleteAccountFailed': 'アカウント削除に失敗しました: ',
       'logoutFailed': 'ログアウトに失敗しました: ',
+
+      'ratePuzzle': 'このパズルの難易度評価',
+      'addComment': 'コメントを追加します（オプション）',
 
       //튜토리얼
       'howToPlayTitle': '遊び方',
