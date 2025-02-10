@@ -12,7 +12,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace 'com.example.chessudoku'
+    namespace 'com.nazestudio.chessudoku'
     compileSdk flutter.compileSdkVersion
     ndkVersion '27.0.12077973'
 
@@ -26,7 +26,7 @@ android {
     }
 
     defaultConfig {
-        applicationId 'com.example.chessudoku'
+        applicationId 'com.nazestudio.chessudoku'
         minSdk 23
         targetSdk flutter.targetSdkVersion
         versionCode flutter.versionCode
