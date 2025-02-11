@@ -179,7 +179,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                                 ),
                               ),
                             ),
-                            const BannerAdWidget(),
+                            // const BannerAdWidget(),
                           ],
                         ),
                       ),

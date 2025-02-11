@@ -102,7 +102,7 @@ class SettingsScreen extends StatelessWidget {
               ],
             ),
           ),
-          const BannerAdWidget(),
+          // const BannerAdWidget(),
         ],
       ),
     );

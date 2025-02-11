@@ -175,7 +175,7 @@ class _RecordScreenState extends State<RecordScreen> with SingleTickerProviderSt
             ),
           ),
           // Add Banner Ad at the bottom
-          const BannerAdWidget(),
+          // const BannerAdWidget(),
         ],
       ),
     );

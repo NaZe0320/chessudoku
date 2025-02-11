@@ -273,7 +273,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              const BannerAdWidget(), // 배너 광고 추가
+              // const BannerAdWidget(), // 배너 광고 추가
             ],
           ),
         ),
